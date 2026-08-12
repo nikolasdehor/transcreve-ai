@@ -1,17 +1,17 @@
 # TranscreveAI
 
-> Developer tool that turns public video URLs and media files into evidence-backed knowledge dossiers for agents and developers.
+> AI video analysis tool that turns public video URLs and media files into evidence-backed transcripts, OCR, summaries, and knowledge dossiers for agents and developers.
 
 TranscreveAI probes supported sources, analyzes video and audio, extracts transcripts and OCR, generates structured artifacts, and can answer questions grounded in completed runs.
 
 ## Product
 
-- [Overview](https://dehor-labs.github.io/transcreve-ai/index.md): Markdown version of the product landing page.
+- [Overview](https://transcreveai.dehor.dev/index.md): Markdown version of the product landing page.
 - [Source code](https://github.com/DeHor-Labs/transcreve-ai): repository and technical documentation.
-- [Demo](https://dehor-labs.github.io/transcreve-ai/demo/transcreveai-chatgpt-app-demo.mp4): video demonstration of the ChatGPT app workflow.
+- [Demo](https://transcreveai.dehor.dev/demo/transcreveai-chatgpt-app-demo.mp4): video demonstration of the ChatGPT app workflow.
 
 ## Policies and support
 
-- [Support](https://dehor-labs.github.io/transcreve-ai/support.html): help, bug reports, and security contacts.
-- [Privacy policy](https://dehor-labs.github.io/transcreve-ai/privacy.html): how TranscreveAI handles user-provided information.
-- [Terms of service](https://dehor-labs.github.io/transcreve-ai/terms.html): conditions and limitations for using TranscreveAI.
+- [Support](https://transcreveai.dehor.dev/support.html): help, bug reports, and security contacts.
+- [Privacy policy](https://transcreveai.dehor.dev/privacy.html): how TranscreveAI handles user-provided information.
+- [Terms of service](https://transcreveai.dehor.dev/terms.html): conditions and limitations for using TranscreveAI.

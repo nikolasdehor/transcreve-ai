@@ -1,6 +1,6 @@
 # TranscreveAI
 
-TranscreveAI turns public video URLs and media files into evidence-backed knowledge dossiers for agents and developers.
+TranscreveAI is an AI video analysis tool that turns public video URLs and media files into evidence-backed transcripts, OCR, summaries, and knowledge dossiers for agents and developers.
 
 ## What it does
 
@@ -13,7 +13,7 @@ TranscreveAI turns public video URLs and media files into evidence-backed knowle
 ## Links
 
 - [Source code](https://github.com/DeHor-Labs/transcreve-ai)
-- [Watch the demo](https://dehor-labs.github.io/transcreve-ai/demo/transcreveai-chatgpt-app-demo.mp4)
-- [Support](https://dehor-labs.github.io/transcreve-ai/support.html)
-- [Privacy policy](https://dehor-labs.github.io/transcreve-ai/privacy.html)
-- [Terms of service](https://dehor-labs.github.io/transcreve-ai/terms.html)
+- [Watch the demo](https://transcreveai.dehor.dev/demo/transcreveai-chatgpt-app-demo.mp4)
+- [Support](https://transcreveai.dehor.dev/support.html)
+- [Privacy policy](https://transcreveai.dehor.dev/privacy.html)
+- [Terms of service](https://transcreveai.dehor.dev/terms.html)
