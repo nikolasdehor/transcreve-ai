@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dehor-labs.github.io/transcreve-ai/sitemap.xml
+Sitemap: https://transcreveai.dehor.dev/sitemap.xml
