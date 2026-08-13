@@ -186,6 +186,71 @@ footer {
   font-size: 0.92rem;
 }
 
+footer .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-link {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--brand-dark);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+}
+
+.consent-banner {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: min(960px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 16px 42px rgba(12, 25, 52, 0.22);
+}
+
+.consent-banner h2 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+}
+
+.consent-banner p {
+  max-width: 680px;
+  margin: 0;
+}
+
+.consent-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.consent-actions .button {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.consent-actions .button.secondary {
+  border: 1px solid var(--line);
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #10131a;
@@ -218,5 +283,15 @@ footer {
     align-items: flex-start;
     flex-direction: column;
     padding: 16px 0;
+  }
+
+  .consent-banner {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .consent-actions .button {
+    flex: 1;
+    justify-content: center;
   }
 }
