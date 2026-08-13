@@ -41,12 +41,25 @@
       cookie_domain: "none",
       cookie_expires: CONSENT_MAX_AGE,
       cookie_update: false,
+      page_location: stripQueryAndFragment(window.location.href),
+      page_referrer: stripQueryAndFragment(document.referrer),
     });
 
     const script = document.createElement("script");
     script.async = true;
     script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(MEASUREMENT_ID)}`;
     document.head.append(script);
+  }
+
+  function stripQueryAndFragment(value) {
+    if (!value) return "";
+
+    try {
+      const url = new URL(value, window.location.href);
+      return `${url.origin}${url.pathname}`;
+    } catch {
+      return "";
+    }
   }
 
   function clearAnalyticsCookies() {
