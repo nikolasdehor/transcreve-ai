@@ -5,9 +5,15 @@
   const CONSENT_COOKIE = "ta_consent";
   const CONSENT_VERSION = "v1";
   const CONSENT_MAX_AGE = 15552000;
+  const CONSENT_CHANNEL = "transcreveai_consent";
+  const FOCUS_RETURN_KEY = "transcreveai_consent_return_focus";
   const GRANTED = "granted";
   const DENIED = "denied";
   let analyticsLoaded = false;
+  let consentReturnFocus = null;
+  const consentChannel = "BroadcastChannel" in window
+    ? new BroadcastChannel(CONSENT_CHANNEL)
+    : null;
 
   window.dataLayer = window.dataLayer || [];
   window.gtag = function gtag() {
@@ -87,13 +93,18 @@
     return consentCookie ? consentCookie.slice(prefix.length) : null;
   }
 
-  function closeBanner() {
+  function closeBanner(restoreFocus = false) {
     const banner = document.querySelector("[data-consent-banner]");
     if (banner) banner.remove();
+    if (restoreFocus && consentReturnFocus?.isConnected) {
+      consentReturnFocus.focus();
+    }
+    consentReturnFocus = null;
   }
 
-  function denyAnalytics() {
+  function denyAnalytics(shouldBroadcast = true) {
     const wasLoaded = analyticsLoaded;
+    const shouldRestoreAfterReload = Boolean(consentReturnFocus?.isConnected);
     saveConsent(DENIED);
     window.gtag("consent", "update", {
       ad_storage: DENIED,
@@ -102,19 +113,30 @@
       analytics_storage: DENIED,
     });
     clearAnalyticsCookies();
-    closeBanner();
+    closeBanner(true);
+    if (shouldBroadcast) consentChannel?.postMessage(DENIED);
 
-    if (wasLoaded) window.location.reload();
+    if (wasLoaded) {
+      if (shouldRestoreAfterReload) {
+        try {
+          window.sessionStorage.setItem(FOCUS_RETURN_KEY, "true");
+        } catch {
+          // Focus restoration is best effort when storage is unavailable.
+        }
+      }
+      window.location.reload();
+    }
   }
 
   function allowAnalytics() {
     saveConsent(GRANTED);
     loadAnalytics();
-    closeBanner();
+    closeBanner(true);
   }
 
-  function showBanner() {
+  function showBanner(returnFocus = null) {
     closeBanner();
+    consentReturnFocus = returnFocus;
 
     const banner = document.createElement("section");
     banner.className = "consent-banner";
@@ -136,19 +158,40 @@
       </div>
     `;
     document.body.append(banner);
-    banner.querySelector("[data-deny-analytics]").addEventListener("click", denyAnalytics);
+    banner.querySelector("[data-deny-analytics]").addEventListener("click", () => denyAnalytics());
     banner.querySelector("[data-allow-analytics]").addEventListener("click", allowAnalytics);
     banner.querySelector("[data-deny-analytics]").focus();
   }
 
   for (const button of document.querySelectorAll("[data-analytics-preferences]")) {
-    button.addEventListener("click", showBanner);
+    button.addEventListener("click", () => showBanner(button));
   }
+
+  if (consentChannel) {
+    consentChannel.addEventListener("message", (event) => {
+      if (event.data === DENIED) denyAnalytics(false);
+    });
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && analyticsLoaded && readConsent() !== GRANTED) {
+      denyAnalytics(false);
+    }
+  });
 
   const storedConsent = readConsent();
   if (storedConsent === GRANTED) {
     loadAnalytics();
   } else if (storedConsent !== DENIED) {
     showBanner();
+  }
+
+  try {
+    if (window.sessionStorage.getItem(FOCUS_RETURN_KEY) === "true") {
+      window.sessionStorage.removeItem(FOCUS_RETURN_KEY);
+      document.querySelector("[data-analytics-preferences]")?.focus();
+    }
+  } catch {
+    // Focus restoration is best effort when storage is unavailable.
   }
 })();
