@@ -69,7 +69,9 @@ class AgentWorkflowResult:
         return data
 
 
-def run_agent_workflow(source: str, options: AgentWorkflowOptions) -> AgentWorkflowResult:
+def run_agent_workflow(
+    source: str, options: AgentWorkflowOptions
+) -> AgentWorkflowResult:
     try:
         probe = detect_source(source)
     except ValueError as exc:
@@ -117,7 +119,9 @@ def run_agent_workflow(source: str, options: AgentWorkflowOptions) -> AgentWorkf
 
     warnings: list[str] = []
     if probe.requires_cookies and not (options.cookies_browser or options.cookies):
-        warnings.append("Fonte pode exigir cookies. Se o download falhar, tente --cookies-browser.")
+        warnings.append(
+            "Fonte pode exigir cookies. Se o download falhar, tente --cookies-browser."
+        )
 
     try:
         analysis_result = VideoKnowledgePipeline(pipeline_options).run(source)
@@ -134,7 +138,10 @@ def run_agent_workflow(source: str, options: AgentWorkflowOptions) -> AgentWorkf
     except Exception:  # noqa: BLE001
         _LOGGER.exception("Falha no fluxo principal do agente para fonte '%s'.", source)
         failed_run_id = _mark_latest_partial_failed(source, probe, options.index_db)
-        failure_warnings = [*warnings, "Falha ao processar a analise. Consulte os logs."]
+        failure_warnings = [
+            *warnings,
+            "Falha ao processar a analise. Consulte os logs.",
+        ]
         if failed_run_id:
             failure_warnings.append(
                 f"Run parcial '{failed_run_id}' marcado como failed para nao bloquear retry."
@@ -159,7 +166,9 @@ def run_agent_workflow(source: str, options: AgentWorkflowOptions) -> AgentWorkf
         _answer_question(result, options)
         if not result.answer:
             result.question = options.question
-            result.warnings.append("Pergunta solicitada, mas nenhuma resposta foi gerada.")
+            result.warnings.append(
+                "Pergunta solicitada, mas nenhuma resposta foi gerada."
+            )
 
     _attach_share_commands(result, options)
     return result
@@ -184,7 +193,9 @@ def _attach_share_commands(
         result.share_run_dir_command = _shell_command(
             ["transcreveai", "share", "--run-dir", result.workdir, "--json"]
         )
-    result.share_catalog_command = _shell_command(["transcreveai", "share", "--catalog", "--json"])
+    result.share_catalog_command = _shell_command(
+        ["transcreveai", "share", "--catalog", "--json"]
+    )
     return result
 
 
@@ -242,7 +253,10 @@ def _result_from_existing(
     else:
         workdir = ""
 
-    existing_warnings = [*warnings, "Run existente reutilizado; use --force para reprocessar."]
+    existing_warnings = [
+        *warnings,
+        "Run existente reutilizado; use --force para reprocessar.",
+    ]
     if not artifact_reference_available(analysis_path):
         existing_warnings.append(
             f"Run existente '{run_id}' nao tem analysis.json disponivel; use --force."
@@ -304,70 +318,123 @@ def _existing_template_paths(workdir: Path) -> dict[str, str]:
     return paths
 
 
-def _index_result(result: AgentWorkflowResult, options: AgentWorkflowOptions) -> None:
-    if not result.analysis_path or not Path(result.analysis_path).exists():
-        result.warnings.append("Nao foi possivel indexar: analysis.json nao encontrado.")
-        return
+def index_analysis_result(
+    *,
+    run_id: str,
+    analysis_path: str,
+    provider_name: str,
+    index_db: str | None,
+    index_force: bool = False,
+) -> tuple[bool, int, list[str]]:
+    """Indexa um run ja analisado para RAG (embeddings).
+
+    Compartilhada por analyze, agent run/batch e o servidor MCP, para que todo
+    run com analise concluida termine indexado por padrao. Nunca levanta
+    excecao: falhas de indexacao viram warnings e cabe ao caller decidir como
+    exibi-las (a analise em si nunca deve falhar por causa da indexacao).
+
+    Retorna (indexed, indexed_chunks, warnings).
+    """
+    warnings: list[str] = []
+    retry_hint = f"Run registrado mas nao indexado; rode 'transcreveai index {run_id}'."
+    if not analysis_path or not Path(analysis_path).exists():
+        warnings.append(
+            f"Nao foi possivel indexar: analysis.json nao encontrado. {retry_hint}"
+        )
+        return False, 0, warnings
 
     try:
         from .embeddings import EmbedNotSupportedError, index_run
         from .embeddings.store import EmbeddingStore
-        from .providers import CapabilityNotSupported, load_provider, resolve_provider_name
+        from .providers import (
+            CapabilityNotSupported,
+            load_provider,
+            resolve_provider_name,
+        )
     except ImportError:
         _LOGGER.exception("Falha ao importar dependencias de RAG para indexacao.")
-        result.warnings.append("Dependencias de RAG ausentes para indexacao.")
-        return
+        warnings.append(f"Dependencias de RAG ausentes para indexacao. {retry_hint}")
+        return False, 0, warnings
 
-    provider_name = resolve_provider_name(options.provider_name or None)
+    resolved_provider = resolve_provider_name(provider_name or None)
     try:
-        provider = load_provider(provider_name)
+        provider = load_provider(resolved_provider)
     except Exception:  # noqa: BLE001
-        _LOGGER.exception("Falha ao carregar provider '%s' para indexacao.", provider_name)
-        result.warnings.append(f"Erro ao carregar provider para indexacao: {provider_name}.")
-        return
+        _LOGGER.exception(
+            "Falha ao carregar provider '%s' para indexacao.", resolved_provider
+        )
+        warnings.append(
+            f"Erro ao carregar provider para indexacao: {resolved_provider}. {retry_hint}"
+        )
+        return False, 0, warnings
 
     if "embed" not in provider.capabilities():
-        result.warnings.append(str(EmbedNotSupportedError(provider_name)))
-        return
-
-    db_path = resolve_index_path(options.index_db)
-    with EmbeddingStore(db_path) as store:
-        if store.has_indexed(result.run_id) and not options.index_force:
-            result.indexed = True
-            result.indexed_chunks = 0
-            return
+        warnings.append(f"{EmbedNotSupportedError(resolved_provider)} {retry_hint}")
+        return False, 0, warnings
 
     try:
-        analysis = json.loads(Path(result.analysis_path).read_text(encoding="utf-8"))
+        db_path = resolve_index_path(index_db)
+        with EmbeddingStore(db_path) as store:
+            if store.has_indexed(run_id) and not index_force:
+                return True, 0, warnings
     except Exception:  # noqa: BLE001
-        _LOGGER.exception("Falha ao ler analysis.json para indexacao: run_id=%s", result.run_id)
-        result.warnings.append("Nao foi possivel ler analysis.json para indexacao.")
-        return
+        _LOGGER.exception("Falha ao consultar indice para o run '%s'.", run_id)
+        warnings.append(f"Erro ao acessar o indice. Consulte os logs. {retry_hint}")
+        return False, 0, warnings
+
+    try:
+        analysis = json.loads(Path(analysis_path).read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        _LOGGER.exception(
+            "Falha ao ler analysis.json para indexacao: run_id=%s", run_id
+        )
+        warnings.append(
+            f"Nao foi possivel ler analysis.json para indexacao. {retry_hint}"
+        )
+        return False, 0, warnings
 
     try:
         count = index_run(
-            run_id=result.run_id,
+            run_id=run_id,
             analysis=analysis,
             provider=provider,
-            provider_name=provider_name,
-            model_name=_get_embed_model(provider, provider_name),
+            provider_name=resolved_provider,
+            model_name=_get_embed_model(provider, resolved_provider),
             db_path=db_path,
-            force=options.index_force,
+            force=index_force,
         )
     except CapabilityNotSupported:
-        _LOGGER.exception("Provider '%s' sem capability requerida para indexacao.", provider_name)
-        result.warnings.append(f"Provider '{provider_name}' nao suporta embeddings para indexacao.")
-        return
+        _LOGGER.exception(
+            "Provider '%s' sem capability requerida para indexacao.", resolved_provider
+        )
+        warnings.append(
+            f"Provider '{resolved_provider}' nao suporta embeddings para indexacao. {retry_hint}"
+        )
+        return False, 0, warnings
     except Exception:  # noqa: BLE001
-        _LOGGER.exception("Falha ao indexar run '%s'.", result.run_id)
-        result.warnings.append("Erro ao indexar run. Consulte os logs.")
-        return
+        _LOGGER.exception("Falha ao indexar run '%s'.", run_id)
+        warnings.append(f"Erro ao indexar run. Consulte os logs. {retry_hint}")
+        return False, 0, warnings
 
-    result.indexed = True
-    result.indexed_chunks = count
+    return True, count, warnings
 
 
-def _answer_question(result: AgentWorkflowResult, options: AgentWorkflowOptions) -> None:
+def _index_result(result: AgentWorkflowResult, options: AgentWorkflowOptions) -> None:
+    indexed, indexed_chunks, warnings = index_analysis_result(
+        run_id=result.run_id,
+        analysis_path=result.analysis_path,
+        provider_name=options.provider_name,
+        index_db=options.index_db,
+        index_force=options.index_force,
+    )
+    result.indexed = indexed
+    result.indexed_chunks = indexed_chunks
+    result.warnings.extend(warnings)
+
+
+def _answer_question(
+    result: AgentWorkflowResult, options: AgentWorkflowOptions
+) -> None:
     if not options.question:
         return
     try:
@@ -383,11 +450,15 @@ def _answer_question(result: AgentWorkflowResult, options: AgentWorkflowOptions)
         provider = load_provider(provider_name)
     except Exception:  # noqa: BLE001
         _LOGGER.exception("Falha ao carregar provider '%s' para ask.", provider_name)
-        result.warnings.append(f"Erro ao carregar provider para pergunta: {provider_name}.")
+        result.warnings.append(
+            f"Erro ao carregar provider para pergunta: {provider_name}."
+        )
         return
 
     if "embed" not in provider.capabilities():
-        result.warnings.append(f"Provider '{provider_name}' nao suporta embeddings para ask.")
+        result.warnings.append(
+            f"Provider '{provider_name}' nao suporta embeddings para ask."
+        )
         return
 
     try:
@@ -401,7 +472,8 @@ def _answer_question(result: AgentWorkflowResult, options: AgentWorkflowOptions)
         )
     except Exception:  # noqa: BLE001
         _LOGGER.exception(
-            "Falha ao responder pergunta no fluxo do agente para run '%s'.", result.run_id
+            "Falha ao responder pergunta no fluxo do agente para run '%s'.",
+            result.run_id,
         )
         result.question = options.question
         result.warnings.append("Erro ao responder pergunta. Consulte os logs.")

@@ -74,13 +74,22 @@ def build_parser() -> argparse.ArgumentParser:
     agent_run.add_argument("source", help="URL ou caminho local do video")
     agent_run.add_argument("--out", default="outputs", help="Diretorio de saida")
     agent_run.add_argument(
-        "--frame-interval", type=float, default=5.0, help="Intervalo entre frames em segundos"
+        "--frame-interval",
+        type=float,
+        default=5.0,
+        help="Intervalo entre frames em segundos",
     )
     agent_run.add_argument(
-        "--max-frames", type=int, default=80, help="Maximo de frames locais (0 = sem limite)"
+        "--max-frames",
+        type=int,
+        default=80,
+        help="Maximo de frames locais (0 = sem limite)",
     )
     agent_run.add_argument(
-        "--visual-limit", type=int, default=30, help="Maximo de frames enviados para visao por IA"
+        "--visual-limit",
+        type=int,
+        default=30,
+        help="Maximo de frames enviados para visao por IA",
     )
     agent_run.add_argument(
         "--ai",
@@ -89,13 +98,23 @@ def build_parser() -> argparse.ArgumentParser:
         help="auto usa IA se a chave de API do provider estiver definida",
     )
     agent_run.add_argument("--vision-model", default="", help="Modelo de visao/sintese")
-    agent_run.add_argument("--transcribe-model", default="", help="Modelo de transcricao")
-    agent_run.add_argument("--language", default=None, help="Idioma do audio, ex: pt, en")
-    agent_run.add_argument("--tesseract-lang", default="por+eng", help="Idioma OCR desejado")
     agent_run.add_argument(
-        "--cookies-browser", default=None, help="Browser para cookies do yt-dlp, ex: chrome"
+        "--transcribe-model", default="", help="Modelo de transcricao"
     )
-    agent_run.add_argument("--cookies", default=None, help="Arquivo cookies.txt para yt-dlp")
+    agent_run.add_argument(
+        "--language", default=None, help="Idioma do audio, ex: pt, en"
+    )
+    agent_run.add_argument(
+        "--tesseract-lang", default="por+eng", help="Idioma OCR desejado"
+    )
+    agent_run.add_argument(
+        "--cookies-browser",
+        default=None,
+        help="Browser para cookies do yt-dlp, ex: chrome",
+    )
+    agent_run.add_argument(
+        "--cookies", default=None, help="Arquivo cookies.txt para yt-dlp"
+    )
     agent_run.add_argument("--format", default="bv*+ba/b", help="Formato yt-dlp")
     agent_run.add_argument(
         "--provider",
@@ -103,7 +122,9 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="NOME",
         help="Provider de IA/embedding: openai, local, gemini, anthropic ou externo.",
     )
-    agent_run.add_argument("--storage", default="", metavar="NOME", help="Backend de armazenamento")
+    agent_run.add_argument(
+        "--storage", default="", metavar="NOME", help="Backend de armazenamento"
+    )
     agent_run.add_argument(
         "--template",
         choices=["content", "skill"],
@@ -130,16 +151,26 @@ def build_parser() -> argparse.ArgumentParser:
         default=False,
         help="Reindexa o run mesmo que ja existam embeddings.",
     )
-    agent_run.add_argument("--question", default=None, help="Pergunta a responder apos indexar")
-    agent_run.add_argument("--top-k", type=int, default=5, help="Numero de trechos para RAG")
-    agent_run.add_argument("--json", dest="as_json", action="store_true", help="Saida JSON")
+    agent_run.add_argument(
+        "--question", default=None, help="Pergunta a responder apos indexar"
+    )
+    agent_run.add_argument(
+        "--top-k", type=int, default=5, help="Numero de trechos para RAG"
+    )
+    agent_run.add_argument(
+        "--json", dest="as_json", action="store_true", help="Saida JSON"
+    )
 
     agent_batch = agent_sub.add_parser(
         "batch",
         help="Executa o workflow de agente para uma lista txt/csv/json de origens.",
     )
-    agent_batch.add_argument("sources_file", help="Arquivo .txt, .csv ou .json com URLs/origens")
-    agent_batch.add_argument("--out", default="outputs-batch", help="Diretorio de saida")
+    agent_batch.add_argument(
+        "sources_file", help="Arquivo .txt, .csv ou .json com URLs/origens"
+    )
+    agent_batch.add_argument(
+        "--out", default="outputs-batch", help="Diretorio de saida"
+    )
     agent_batch.add_argument(
         "--frame-interval",
         type=float,
@@ -158,18 +189,30 @@ def build_parser() -> argparse.ArgumentParser:
         default=30,
         help="Maximo de frames enviados para visao por IA em cada run",
     )
-    agent_batch.add_argument("--provider", default="", metavar="NOME", help="Provider de IA")
+    agent_batch.add_argument(
+        "--provider", default="", metavar="NOME", help="Provider de IA"
+    )
     agent_batch.add_argument(
         "--ai",
         choices=["auto", "off", "full"],
         default="auto",
         help="Modo de IA repassado para cada run",
     )
-    agent_batch.add_argument("--vision-model", default="", help="Modelo de visao/sintese")
-    agent_batch.add_argument("--transcribe-model", default="", help="Modelo de transcricao")
-    agent_batch.add_argument("--language", default=None, help="Idioma do audio, ex: pt, en")
-    agent_batch.add_argument("--tesseract-lang", default="por+eng", help="Idioma OCR desejado")
-    agent_batch.add_argument("--cookies-browser", default=None, help="Browser para cookies")
+    agent_batch.add_argument(
+        "--vision-model", default="", help="Modelo de visao/sintese"
+    )
+    agent_batch.add_argument(
+        "--transcribe-model", default="", help="Modelo de transcricao"
+    )
+    agent_batch.add_argument(
+        "--language", default=None, help="Idioma do audio, ex: pt, en"
+    )
+    agent_batch.add_argument(
+        "--tesseract-lang", default="por+eng", help="Idioma OCR desejado"
+    )
+    agent_batch.add_argument(
+        "--cookies-browser", default=None, help="Browser para cookies"
+    )
     agent_batch.add_argument("--cookies", default=None, help="Arquivo cookies.txt")
     agent_batch.add_argument("--format", default="bv*+ba/b", help="Formato yt-dlp")
     agent_batch.add_argument(
@@ -201,7 +244,9 @@ def build_parser() -> argparse.ArgumentParser:
     agent_batch.add_argument("--index-force", action="store_true", default=False)
     agent_batch.add_argument("--question", default=None, help="Pergunta para cada run")
     agent_batch.add_argument("--top-k", type=int, default=5)
-    agent_batch.add_argument("--limit", type=int, default=0, help="Limita numero de origens")
+    agent_batch.add_argument(
+        "--limit", type=int, default=0, help="Limita numero de origens"
+    )
     agent_batch.add_argument("--fail-fast", action="store_true", default=False)
     agent_batch.add_argument(
         "--strict",
@@ -209,22 +254,35 @@ def build_parser() -> argparse.ArgumentParser:
         default=False,
         help="Retorna exit code 1 se qualquer item do batch falhar",
     )
-    agent_batch.add_argument("--json", dest="as_json", action="store_true", help="Saida JSON")
+    agent_batch.add_argument(
+        "--json", dest="as_json", action="store_true", help="Saida JSON"
+    )
 
     # ------------------------------------------------------------------
     # analyze
     # ------------------------------------------------------------------
-    analyze = subparsers.add_parser("analyze", help="Analisa um link ou arquivo de video")
+    analyze = subparsers.add_parser(
+        "analyze", help="Analisa um link ou arquivo de video"
+    )
     analyze.add_argument("source", help="URL ou caminho local do video")
     analyze.add_argument("--out", default="outputs", help="Diretorio de saida")
     analyze.add_argument(
-        "--frame-interval", type=float, default=5.0, help="Intervalo entre frames em segundos"
+        "--frame-interval",
+        type=float,
+        default=5.0,
+        help="Intervalo entre frames em segundos",
     )
     analyze.add_argument(
-        "--max-frames", type=int, default=80, help="Maximo de frames locais (0 = sem limite)"
+        "--max-frames",
+        type=int,
+        default=80,
+        help="Maximo de frames locais (0 = sem limite)",
     )
     analyze.add_argument(
-        "--visual-limit", type=int, default=30, help="Maximo de frames enviados para visao por IA"
+        "--visual-limit",
+        type=int,
+        default=30,
+        help="Maximo de frames enviados para visao por IA",
     )
     analyze.add_argument(
         "--ai",
@@ -235,11 +293,17 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--vision-model", default="", help="Modelo de visao/sintese")
     analyze.add_argument("--transcribe-model", default="", help="Modelo de transcricao")
     analyze.add_argument("--language", default=None, help="Idioma do audio, ex: pt, en")
-    analyze.add_argument("--tesseract-lang", default="por+eng", help="Idioma OCR desejado")
     analyze.add_argument(
-        "--cookies-browser", default=None, help="Browser para cookies do yt-dlp, ex: chrome"
+        "--tesseract-lang", default="por+eng", help="Idioma OCR desejado"
     )
-    analyze.add_argument("--cookies", default=None, help="Arquivo cookies.txt para yt-dlp")
+    analyze.add_argument(
+        "--cookies-browser",
+        default=None,
+        help="Browser para cookies do yt-dlp, ex: chrome",
+    )
+    analyze.add_argument(
+        "--cookies", default=None, help="Arquivo cookies.txt para yt-dlp"
+    )
     analyze.add_argument("--format", default="bv*+ba/b", help="Formato yt-dlp")
     analyze.add_argument(
         "--provider",
@@ -272,6 +336,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="append",
         default=[],
         help="Gera artefato adicional: content ou skill.",
+    )
+    analyze.add_argument(
+        "--no-index",
+        action="store_true",
+        default=False,
+        help="Nao gera embeddings apos a analise (por padrao, analyze indexa automaticamente).",
     )
 
     # ------------------------------------------------------------------
@@ -325,7 +395,9 @@ def build_parser() -> argparse.ArgumentParser:
         "share",
         help="Empacota um run como conhecimento compartilhavel para agentes",
     )
-    share_parser.add_argument("run_id", nargs="?", default="", help="ID do run no indice")
+    share_parser.add_argument(
+        "run_id", nargs="?", default="", help="ID do run no indice"
+    )
     share_parser.add_argument(
         "--run-dir",
         default=None,
@@ -344,9 +416,13 @@ def build_parser() -> argparse.ArgumentParser:
         default=False,
         help="Lista o catalogo de conhecimento compartilhado",
     )
-    share_parser.add_argument("--limit", type=int, default=20, help="Limite para --catalog")
+    share_parser.add_argument(
+        "--limit", type=int, default=20, help="Limite para --catalog"
+    )
     share_parser.add_argument("--query", default="", help="Filtra --catalog por termo")
-    share_parser.add_argument("--json", dest="as_json", action="store_true", help="Saida JSON")
+    share_parser.add_argument(
+        "--json", dest="as_json", action="store_true", help="Saida JSON"
+    )
 
     # ------------------------------------------------------------------
     # index
@@ -470,7 +546,9 @@ def build_parser() -> argparse.ArgumentParser:
     # ------------------------------------------------------------------
     # serve
     # ------------------------------------------------------------------
-    serve_parser = subparsers.add_parser("serve", help="Inicia o servidor web TranscreveAI")
+    serve_parser = subparsers.add_parser(
+        "serve", help="Inicia o servidor web TranscreveAI"
+    )
     serve_parser.add_argument(
         "--host", default="127.0.0.1", help="Host do servidor (default: 127.0.0.1)"
     )
@@ -478,13 +556,19 @@ def build_parser() -> argparse.ArgumentParser:
         "--port", type=int, default=8000, help="Porta do servidor (default: 8000)"
     )
     serve_parser.add_argument(
-        "--out", default="outputs", help="Diretorio de saida dos jobs (default: outputs)"
+        "--out",
+        default="outputs",
+        help="Diretorio de saida dos jobs (default: outputs)",
     )
     serve_parser.add_argument(
-        "--reload", action="store_true", default=False, help="Hot-reload (apenas desenvolvimento)"
+        "--reload",
+        action="store_true",
+        default=False,
+        help="Hot-reload (apenas desenvolvimento)",
     )
 
     return parser
+
 
 # ---------------------------------------------------------------------------
 # main
@@ -564,7 +648,9 @@ def _normalize_templates(raw_templates: list[str] | None) -> tuple[str, ...]:
     return tuple(templates)
 
 
-def _template_output_paths(workdir: Path, templates: tuple[str, ...]) -> dict[str, Path]:
+def _template_output_paths(
+    workdir: Path, templates: tuple[str, ...]
+) -> dict[str, Path]:
     paths: dict[str, Path] = {}
     if "content" in templates:
         content_md = workdir / "content.md"
@@ -666,7 +752,9 @@ def _cmd_agent_run(args: argparse.Namespace) -> None:
         templates=_normalize_templates(args.template),
     )
     if args.as_json:
-        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(
+            io.StringIO()
+        ):
             result = run_agent_workflow(args.source, options)
     else:
         result = run_agent_workflow(args.source, options)
@@ -704,7 +792,9 @@ def _cmd_agent_run(args: argparse.Namespace) -> None:
         print("\nFontes:")
         for i, hit in enumerate(result.sources, start=1):
             score = hit.get("score")
-            score_pct = f"{float(score) * 100:.1f}%" if isinstance(score, (int, float)) else "?"
+            score_pct = (
+                f"{float(score) * 100:.1f}%" if isinstance(score, (int, float)) else "?"
+            )
             title = hit.get("title") or hit.get("run_id") or "fonte"
             print(f"  [{i}] {title} - score: {score_pct}")
     if result.warnings:
@@ -923,10 +1013,31 @@ def _cmd_analyze(args: argparse.Namespace) -> None:
         print("Use --force para reprocessar mesmo assim.")
         sys.exit(0)
 
+    indexed = False
+    indexed_chunks = 0
+    index_warnings: list[str] = []
+    if not args.no_index:
+        from .agent_workflow import index_analysis_result
+
+        indexed, indexed_chunks, index_warnings = index_analysis_result(
+            run_id=str(result.run_id),
+            analysis_path=str(Path(result.workdir) / "analysis.json"),
+            provider_name=args.provider,
+            index_db=getattr(args, "index_db", None),
+            index_force=args.force,
+        )
+
     print("")
     print(f"OK: {result.workdir}")
     print("Markdown: %s" % (Path(result.workdir) / "knowledge.md"))
     print("JSON: %s" % (Path(result.workdir) / "analysis.json"))
+    if indexed:
+        if indexed_chunks:
+            print(f"Index: ok ({indexed_chunks} chunks novos).")
+        else:
+            print("Index: ok (ja indexado).")
+    for warning in index_warnings:
+        print(f"Aviso: {warning}")
     template_paths = _template_output_paths(
         Path(result.workdir),
         _normalize_templates(args.template),
@@ -1008,7 +1119,11 @@ def _cmd_runs_rm(args: argparse.Namespace) -> None:
 
     if not args.force:
         purge_msg = f" e deletar '{output_dir}'" if args.purge and output_dir else ""
-        resposta = input(f"Remover '{args.run_id}'{purge_msg} do indice? [s/N] ").strip().lower()
+        resposta = (
+            input(f"Remover '{args.run_id}'{purge_msg} do indice? [s/N] ")
+            .strip()
+            .lower()
+        )
         if resposta not in ("s", "sim", "y", "yes"):
             print("Cancelado.")
             return
@@ -1056,7 +1171,9 @@ def _cmd_share(args: argparse.Namespace) -> None:
 
     try:
         if args.catalog:
-            payload = shared_catalog(out_dir=args.out, limit=args.limit, query=args.query)
+            payload = shared_catalog(
+                out_dir=args.out, limit=args.limit, query=args.query
+            )
         else:
             payload = share_run(
                 run_id=args.run_id,
@@ -1068,7 +1185,10 @@ def _cmd_share(args: argparse.Namespace) -> None:
         if args.as_json:
             print(
                 json.dumps(
-                    {"ok": False, "error": {"code": "share_failed", "message": str(exc)}},
+                    {
+                        "ok": False,
+                        "error": {"code": "share_failed", "message": str(exc)},
+                    },
                     ensure_ascii=False,
                     indent=2,
                 )
@@ -1081,7 +1201,10 @@ def _cmd_share(args: argparse.Namespace) -> None:
         if args.as_json:
             print(
                 json.dumps(
-                    {"ok": False, "error": {"code": "share_failed", "message": message}},
+                    {
+                        "ok": False,
+                        "error": {"code": "share_failed", "message": message},
+                    },
                     ensure_ascii=False,
                     indent=2,
                 )
@@ -1173,7 +1296,9 @@ def _cmd_index(args: argparse.Namespace) -> None:
 
         analysis_path = run.get("analysis_path") or ""
         if not analysis_path or not Path(analysis_path).exists():
-            print(f"  Pulando '{run_id}': analysis.json nao encontrado em '{analysis_path}'.")
+            print(
+                f"  Pulando '{run_id}': analysis.json nao encontrado em '{analysis_path}'."
+            )
             skipped += 1
             continue
 
@@ -1185,7 +1310,9 @@ def _cmd_index(args: argparse.Namespace) -> None:
 
         if already and not args.force:
             title = run.get("title") or run_id
-            print(f"  Run '{title}' ({run_id}) ja indexado. Use --force para reindexar.")
+            print(
+                f"  Run '{title}' ({run_id}) ja indexado. Use --force para reindexar."
+            )
             skipped += 1
             continue
 
@@ -1213,7 +1340,9 @@ def _cmd_index(args: argparse.Namespace) -> None:
             sys.exit(1)
 
         if count == 0 and not args.force:
-            print(f"  Run '{title}' ({run_id}) ja indexado. Use --force para reindexar.")
+            print(
+                f"  Run '{title}' ({run_id}) ja indexado. Use --force para reindexar."
+            )
             skipped += 1
         else:
             print(f"  Indexando '{title}'... {count} chunks gerados.")
