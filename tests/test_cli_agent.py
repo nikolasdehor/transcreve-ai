@@ -55,7 +55,9 @@ class TestCliAgentRun(unittest.TestCase):
         self.assertGreater(len(payload["warnings"]), 0)
 
     def test_agent_run_unsafe_source_json_exits_nonzero(self) -> None:
-        out, err, code = _run_cmd(["agent", "run", "http://127.0.0.1/video.mp4", "--json"])
+        out, err, code = _run_cmd(
+            ["agent", "run", "http://127.0.0.1/video.mp4", "--json"]
+        )
 
         self.assertEqual(code, 1, msg=err)
         payload = json.loads(out.strip() or "{}")
@@ -241,7 +243,9 @@ class TestCliAgentRun(unittest.TestCase):
         self.assertEqual(code, 0, msg=err)
         payload = json.loads(out.strip() or "{}")
         self.assertTrue(payload["template_paths"]["content"].endswith("content.md"))
-        self.assertTrue(payload["template_paths"]["content_json"].endswith("content.json"))
+        self.assertTrue(
+            payload["template_paths"]["content_json"].endswith("content.json")
+        )
 
     def test_agent_batch_json_outputs_summary(self) -> None:
         from video_kb.agent_workflow import AgentWorkflowResult
@@ -295,7 +299,9 @@ class TestCliAgentRun(unittest.TestCase):
         self.assertTrue(payload["success"])
         self.assertEqual(payload["ok"], 1)
         expected_skill_path = str(out_dir / "run-001" / "skill.md")
-        self.assertEqual(payload["items"][0]["template_paths"]["skill"], expected_skill_path)
+        self.assertEqual(
+            payload["items"][0]["template_paths"]["skill"], expected_skill_path
+        )
 
     def test_agent_batch_passes_analysis_options_to_each_run(self) -> None:
         from video_kb.agent_workflow import AgentWorkflowResult
@@ -394,7 +400,9 @@ class TestCliAgentRun(unittest.TestCase):
                 markdown_path=str(out_dir / "run-001" / "knowledge.md"),
             )
 
-            with patch("video_kb.batch.run_agent_workflow", return_value=result) as run_mock:
+            with patch(
+                "video_kb.batch.run_agent_workflow", return_value=result
+            ) as run_mock:
                 out, err, code = _run_cmd(
                     [
                         "agent",
@@ -504,7 +512,9 @@ class TestCliAgentRun(unittest.TestCase):
         self.assertEqual(payload["ok_count"], 1)
         self.assertEqual(payload["failed_count"], 1)
 
-    def test_agent_batch_invalid_sources_file_json_returns_structured_error(self) -> None:
+    def test_agent_batch_invalid_sources_file_json_returns_structured_error(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             sources = Path(tmpdir) / "sources.json"
             sources.write_text("{invalid", encoding="utf-8")
@@ -581,7 +591,9 @@ class TestCliAgentRun(unittest.TestCase):
         payload = json.loads(out.strip() or "{}")
         self.assertEqual(payload["run_id"], "remote-run")
         self.assertTrue(payload["reused_existing"])
-        self.assertEqual(payload["analysis_path"], "s3://bucket/runs/remote-run/analysis.json")
+        self.assertEqual(
+            payload["analysis_path"], "s3://bucket/runs/remote-run/analysis.json"
+        )
 
     def test_agent_run_question_without_answer_json_exits_nonzero(self) -> None:
         from video_kb.agent_workflow import AgentWorkflowResult
@@ -608,7 +620,9 @@ class TestCliAgentRun(unittest.TestCase):
                 warnings=["Erro ao responder pergunta: sem provider"],
             )
 
-            with patch("video_kb.agent_workflow.run_agent_workflow", return_value=result):
+            with patch(
+                "video_kb.agent_workflow.run_agent_workflow", return_value=result
+            ):
                 out, err, code = _run_cmd(
                     [
                         "agent",
@@ -627,7 +641,11 @@ class TestCliAgentRun(unittest.TestCase):
         self.assertIsNone(payload["answer"])
 
     def test_index_result_runtime_error_becomes_warning(self) -> None:
-        from video_kb.agent_workflow import AgentWorkflowOptions, AgentWorkflowResult, _index_result
+        from video_kb.agent_workflow import (
+            AgentWorkflowOptions,
+            AgentWorkflowResult,
+            _index_result,
+        )
         from video_kb.sources import SourceProbe
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -654,7 +672,10 @@ class TestCliAgentRun(unittest.TestCase):
             fake_provider = SimpleNamespace(capabilities=lambda: ["embed"])
 
             with patch("video_kb.providers.load_provider", return_value=fake_provider):
-                with patch("video_kb.embeddings.index_run", side_effect=RuntimeError("embed caiu")):
+                with patch(
+                    "video_kb.embeddings.index_run",
+                    side_effect=RuntimeError("embed caiu"),
+                ):
                     _index_result(result, options)
 
         self.assertFalse(result.indexed)
@@ -692,7 +713,9 @@ class TestCliAgentRun(unittest.TestCase):
             fake_provider = SimpleNamespace(capabilities=lambda: ["embed"])
 
             with patch("video_kb.providers.load_provider", return_value=fake_provider):
-                with patch("video_kb.embeddings.rag.ask", side_effect=RuntimeError("rag caiu")):
+                with patch(
+                    "video_kb.embeddings.rag.ask", side_effect=RuntimeError("rag caiu")
+                ):
                     _answer_question(result, options)
 
         self.assertEqual(result.question, "resuma")
@@ -700,6 +723,150 @@ class TestCliAgentRun(unittest.TestCase):
         warnings = " ".join(result.warnings)
         self.assertNotIn("rag caiu", warnings)
         self.assertIn("Consulte os logs", warnings)
+
+
+# ---------------------------------------------------------------------------
+# index_analysis_result - funcao pura compartilhada por analyze/agent/mcp
+# ---------------------------------------------------------------------------
+
+
+class TestIndexAnalysisResult(unittest.TestCase):
+    def test_sucesso_retorna_indexed_e_chunks(self) -> None:
+        from video_kb.agent_workflow import index_analysis_result
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            analysis_path = tmp_path / "analysis.json"
+            analysis_path.write_text("{}", encoding="utf-8")
+            fake_provider = SimpleNamespace(capabilities=lambda: ["embed"])
+
+            with patch("video_kb.providers.load_provider", return_value=fake_provider):
+                with patch("video_kb.embeddings.index_run", return_value=7):
+                    indexed, chunks, warnings = index_analysis_result(
+                        run_id="run-001",
+                        analysis_path=str(analysis_path),
+                        provider_name="local",
+                        index_db=str(tmp_path / "index.db"),
+                    )
+
+        self.assertTrue(indexed)
+        self.assertEqual(chunks, 7)
+        self.assertEqual(warnings, [])
+
+    def test_embed_nao_suportado_gera_warning_acionavel(self) -> None:
+        from video_kb.agent_workflow import index_analysis_result
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            analysis_path = tmp_path / "analysis.json"
+            analysis_path.write_text("{}", encoding="utf-8")
+            fake_provider = SimpleNamespace(capabilities=lambda: [])
+
+            with patch("video_kb.providers.load_provider", return_value=fake_provider):
+                indexed, chunks, warnings = index_analysis_result(
+                    run_id="run-002",
+                    analysis_path=str(analysis_path),
+                    provider_name="local",
+                    index_db=str(tmp_path / "index.db"),
+                )
+
+        self.assertFalse(indexed)
+        self.assertEqual(chunks, 0)
+        joined = " ".join(warnings)
+        self.assertIn("transcreveai index run-002", joined)
+
+
+# ---------------------------------------------------------------------------
+# analyze - auto-indexacao por padrao (nunca mais run sem embeddings)
+# ---------------------------------------------------------------------------
+
+
+class TestCliAnalyzeAutoIndex(unittest.TestCase):
+    def _run_analyze(self, extra_args: list[str]) -> tuple[str, str, int, Path]:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            workdir = tmp_path / "outputs" / "run-001"
+            workdir.mkdir(parents=True)
+            (workdir / "knowledge.md").write_text("# Dossie\n", encoding="utf-8")
+            (workdir / "analysis.json").write_text("{}", encoding="utf-8")
+            db_path = tmp_path / "index.db"
+
+            fake_result = SimpleNamespace(run_id="run-001", workdir=str(workdir))
+
+            with patch(
+                "video_kb.pipeline.VideoKnowledgePipeline.run",
+                return_value=fake_result,
+            ):
+                out, err, code = _run_cmd(
+                    [
+                        "--index-db",
+                        str(db_path),
+                        "analyze",
+                        "https://example.com/v",
+                        "--out",
+                        str(tmp_path / "outputs"),
+                        "--ai",
+                        "off",
+                        "--provider",
+                        "local",
+                        *extra_args,
+                    ]
+                )
+            return out, err, code, db_path
+
+    def test_analyze_indexa_por_padrao(self) -> None:
+        with patch(
+            "video_kb.agent_workflow.index_analysis_result",
+            return_value=(True, 3, []),
+        ) as index_mock:
+            out, err, code, db_path = self._run_analyze([])
+
+        self.assertEqual(code, 0, msg=err)
+        self.assertIn("Index: ok (3 chunks novos).", out)
+        index_mock.assert_called_once()
+        call_kwargs = index_mock.call_args.kwargs
+        self.assertEqual(call_kwargs["run_id"], "run-001")
+        self.assertTrue(call_kwargs["analysis_path"].endswith("analysis.json"))
+        self.assertEqual(call_kwargs["provider_name"], "local")
+        self.assertEqual(call_kwargs["index_db"], str(db_path))
+        self.assertFalse(call_kwargs["index_force"])
+
+    def test_analyze_no_index_pula_indexacao(self) -> None:
+        with patch(
+            "video_kb.agent_workflow.index_analysis_result",
+            return_value=(True, 3, []),
+        ) as index_mock:
+            out, err, code, _db_path = self._run_analyze(["--no-index"])
+
+        self.assertEqual(code, 0, msg=err)
+        self.assertNotIn("Index: ok", out)
+        index_mock.assert_not_called()
+
+    def test_analyze_falha_de_indexacao_nao_derruba_analyze(self) -> None:
+        falha = (
+            "Erro ao indexar run. Consulte os logs. "
+            "Run registrado mas nao indexado; rode 'transcreveai index run-001'."
+        )
+        with patch(
+            "video_kb.agent_workflow.index_analysis_result",
+            return_value=(False, 0, [falha]),
+        ):
+            out, err, code, _db_path = self._run_analyze([])
+
+        self.assertEqual(code, 0, msg=err)
+        self.assertIn(f"Aviso: {falha}", out)
+        self.assertNotIn("Index: ok", out)
+
+    def test_analyze_force_propaga_index_force(self) -> None:
+        with patch(
+            "video_kb.agent_workflow.index_analysis_result",
+            return_value=(True, 1, []),
+        ) as index_mock:
+            out, err, code, _db_path = self._run_analyze(["--force"])
+
+        self.assertEqual(code, 0, msg=err)
+        index_mock.assert_called_once()
+        self.assertTrue(index_mock.call_args.kwargs["index_force"])
 
 
 if __name__ == "__main__":
