@@ -39,6 +39,8 @@ class AgentWorkflowOptions:
     question: str | None = None
     top_k: int = 5
     index_force: bool = False
+    # "auto" | "slides" | "interval" - ver _should_detect_slides().
+    frame_strategy: str = "auto"
     templates: tuple[str, ...] = ()
 
 
@@ -69,9 +71,7 @@ class AgentWorkflowResult:
         return data
 
 
-def run_agent_workflow(
-    source: str, options: AgentWorkflowOptions
-) -> AgentWorkflowResult:
+def run_agent_workflow(source: str, options: AgentWorkflowOptions) -> AgentWorkflowResult:
     try:
         probe = detect_source(source)
     except ValueError as exc:
@@ -101,6 +101,7 @@ def run_agent_workflow(
         out_dir=options.out_dir,
         frame_interval=options.frame_interval,
         max_frames=options.max_frames,
+        frame_strategy=options.frame_strategy,
         visual_limit=options.visual_limit,
         ai_mode=options.ai_mode,
         vision_model=options.vision_model,
@@ -119,9 +120,7 @@ def run_agent_workflow(
 
     warnings: list[str] = []
     if probe.requires_cookies and not (options.cookies_browser or options.cookies):
-        warnings.append(
-            "Fonte pode exigir cookies. Se o download falhar, tente --cookies-browser."
-        )
+        warnings.append("Fonte pode exigir cookies. Se o download falhar, tente --cookies-browser.")
 
     try:
         analysis_result = VideoKnowledgePipeline(pipeline_options).run(source)
@@ -166,9 +165,7 @@ def run_agent_workflow(
         _answer_question(result, options)
         if not result.answer:
             result.question = options.question
-            result.warnings.append(
-                "Pergunta solicitada, mas nenhuma resposta foi gerada."
-            )
+            result.warnings.append("Pergunta solicitada, mas nenhuma resposta foi gerada.")
 
     _attach_share_commands(result, options)
     return result
@@ -193,9 +190,7 @@ def _attach_share_commands(
         result.share_run_dir_command = _shell_command(
             ["transcreveai", "share", "--run-dir", result.workdir, "--json"]
         )
-    result.share_catalog_command = _shell_command(
-        ["transcreveai", "share", "--catalog", "--json"]
-    )
+    result.share_catalog_command = _shell_command(["transcreveai", "share", "--catalog", "--json"])
     return result
 
 
@@ -338,9 +333,7 @@ def index_analysis_result(
     warnings: list[str] = []
     retry_hint = f"Run registrado mas nao indexado; rode 'transcreveai index {run_id}'."
     if not analysis_path or not Path(analysis_path).exists():
-        warnings.append(
-            f"Nao foi possivel indexar: analysis.json nao encontrado. {retry_hint}"
-        )
+        warnings.append(f"Nao foi possivel indexar: analysis.json nao encontrado. {retry_hint}")
         return False, 0, warnings
 
     try:
@@ -360,9 +353,7 @@ def index_analysis_result(
     try:
         provider = load_provider(resolved_provider)
     except Exception:  # noqa: BLE001
-        _LOGGER.exception(
-            "Falha ao carregar provider '%s' para indexacao.", resolved_provider
-        )
+        _LOGGER.exception("Falha ao carregar provider '%s' para indexacao.", resolved_provider)
         warnings.append(
             f"Erro ao carregar provider para indexacao: {resolved_provider}. {retry_hint}"
         )
@@ -385,12 +376,8 @@ def index_analysis_result(
     try:
         analysis = json.loads(Path(analysis_path).read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001
-        _LOGGER.exception(
-            "Falha ao ler analysis.json para indexacao: run_id=%s", run_id
-        )
-        warnings.append(
-            f"Nao foi possivel ler analysis.json para indexacao. {retry_hint}"
-        )
+        _LOGGER.exception("Falha ao ler analysis.json para indexacao: run_id=%s", run_id)
+        warnings.append(f"Nao foi possivel ler analysis.json para indexacao. {retry_hint}")
         return False, 0, warnings
 
     try:
@@ -432,9 +419,7 @@ def _index_result(result: AgentWorkflowResult, options: AgentWorkflowOptions) ->
     result.warnings.extend(warnings)
 
 
-def _answer_question(
-    result: AgentWorkflowResult, options: AgentWorkflowOptions
-) -> None:
+def _answer_question(result: AgentWorkflowResult, options: AgentWorkflowOptions) -> None:
     if not options.question:
         return
     try:
@@ -450,15 +435,11 @@ def _answer_question(
         provider = load_provider(provider_name)
     except Exception:  # noqa: BLE001
         _LOGGER.exception("Falha ao carregar provider '%s' para ask.", provider_name)
-        result.warnings.append(
-            f"Erro ao carregar provider para pergunta: {provider_name}."
-        )
+        result.warnings.append(f"Erro ao carregar provider para pergunta: {provider_name}.")
         return
 
     if "embed" not in provider.capabilities():
-        result.warnings.append(
-            f"Provider '{provider_name}' nao suporta embeddings para ask."
-        )
+        result.warnings.append(f"Provider '{provider_name}' nao suporta embeddings para ask.")
         return
 
     try:

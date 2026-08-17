@@ -1,8 +1,10 @@
+import re
 from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .code_extraction import redact_code_secrets
 from .evidence import get_evidence_items, render_evidence_item, tool_names_from_evidence
 from .models import AnalysisResult, FrameObservation, TranscriptSegment
 from .utils import compact_text, format_timestamp
@@ -50,7 +52,20 @@ def render_markdown(result: AnalysisResult) -> str:
         lines.append("")
 
     chapter_title = "Slides / estrutura" if is_carousel else "Capitulos"
-    _append_list(lines, chapter_title, _render_chapters(result.synthesis.chapters, is_carousel))
+    illustrated = (
+        []
+        if is_carousel
+        else _render_illustrated_chapters(result.synthesis.chapters, result.frames)
+    )
+    if illustrated:
+        lines.append(f"## {chapter_title}")
+        lines.extend(illustrated)
+    else:
+        _append_list(
+            lines,
+            chapter_title,
+            _render_chapters(result.synthesis.chapters, is_carousel),
+        )
     evidence_items = get_evidence_items(result)
     tools = _unique(
         [*result.synthesis.tools_or_products, *tool_names_from_evidence(evidence_items)]
@@ -82,6 +97,11 @@ def render_markdown(result: AnalysisResult) -> str:
         else:
             lines.append("_Nenhum frame extraido._")
     lines.append("")
+
+    code_lines = _render_code_blocks(result.frames, is_carousel)
+    if code_lines:
+        lines.append("## Codigo mostrado na tela")
+        lines.extend(code_lines)
 
     if result.transcript_text:
         lines.append("## Transcricao")
@@ -224,6 +244,100 @@ def _render_chapters(chapters: list[dict], is_carousel: bool = False) -> list[st
             text += f": {notes}" if title else f" - {notes}"
         rendered.append(text)
     return rendered
+
+
+def _chapter_start_seconds(chapter: dict) -> float | None:
+    """Instante inicial do capitulo em segundos, aceitando numero ou "MM:SS"."""
+    raw = chapter.get("start", chapter.get("timestamp", ""))
+    if isinstance(raw, (int, float)):
+        return float(raw)
+
+    text = str(raw or "").strip()
+    if not text:
+        return None
+    if re.fullmatch(r"\d+(\.\d+)?", text):
+        return float(text)
+
+    parts = text.split(":")
+    if not all(re.fullmatch(r"\d+(\.\d+)?", part.strip()) for part in parts):
+        return None
+    seconds = 0.0
+    for part in parts:
+        seconds = seconds * 60 + float(part.strip())
+    return seconds
+
+
+def _frame_for_timestamp(
+    frames: list[FrameObservation], timestamp: float
+) -> FrameObservation | None:
+    """Frame que melhor ilustra este instante: o ultimo capturado ate ele.
+
+    Usa o anterior (e nao o mais proximo) porque o slide que estava na tela
+    quando o capitulo comecou e o que ilustra o capitulo; o proximo frame ja
+    pode ser o slide seguinte.
+    """
+    if not frames:
+        return None
+    candidates = [frame for frame in frames if frame.timestamp <= timestamp + 1.0]
+    if not candidates:
+        return frames[0]
+    return max(candidates, key=lambda frame: frame.timestamp)
+
+
+def _render_illustrated_chapters(
+    chapters: list[dict],
+    frames: list[FrameObservation],
+) -> list[str]:
+    """Capitulos com o frame correspondente ao lado do texto.
+
+    E o que torna o dossie util para um agente: a estrutura do video e a imagem
+    da tela naquele ponto ficam juntas, em vez de o texto viver no topo e as
+    imagens num anexo no fim.
+    """
+    if not chapters or not frames:
+        return []
+
+    lines: list[str] = []
+    used: set[str] = set()
+    for chapter in chapters:
+        start = _chapter_start_seconds(chapter)
+        title = chapter.get("title") or chapter.get("heading") or ""
+        notes = chapter.get("notes") or chapter.get("content") or chapter.get("summary") or ""
+
+        label = format_timestamp(start) if start is not None else ""
+        heading = f"{label} - {title}".strip(" -") if (label or title) else "Capitulo"
+        lines.append(f"### {heading}")
+
+        frame = _frame_for_timestamp(frames, start) if start is not None else None
+        if frame and frame.image_path not in used:
+            used.add(frame.image_path)
+            lines.append(f"![{label or 'frame'}]({Path(frame.image_path).as_posix()})")
+        if notes:
+            lines.append(str(notes).strip())
+        if frame and frame.code:
+            lines.append("")
+            lines.append("```")
+            lines.append(redact_code_secrets(frame.code))
+            lines.append("```")
+        lines.append("")
+    return lines
+
+
+def _render_code_blocks(frames: list[FrameObservation], is_carousel: bool) -> list[str]:
+    """Todo codigo lido na tela, agrupado e cercado, na ordem do video."""
+    lines: list[str] = []
+    seen: set[str] = set()
+    for index, frame in enumerate(frames, start=1):
+        if not frame.code or frame.code in seen:
+            continue
+        seen.add(frame.code)
+        label = f"Slide {index}" if is_carousel else format_timestamp(frame.timestamp)
+        lines.append(f"### {label}")
+        lines.append("```")
+        lines.append(redact_code_secrets(frame.code))
+        lines.append("```")
+        lines.append("")
+    return lines
 
 
 def _slide_label_from_number(value: float) -> str:

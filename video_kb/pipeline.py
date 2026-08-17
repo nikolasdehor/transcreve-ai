@@ -11,14 +11,25 @@ from .ai import (
     select_visual_frames,
     transcript_near,
 )
+from .code_extraction import (
+    extract_code_block,
+    normalize_code_block,
+    redact_code_secrets,
+    strip_line_numbers,
+)
 from .content_intelligence import write_content_artifacts
 from .downloader import DownloadedMedia
 from .downloader import fetch_media_bundle as fetch_media
 from .evidence import build_evidence_items
 from .index import DuplicateRunError, RunIndex, resolve_index_path
-from .media import extract_audio, extract_frames, probe_duration
+from .media import (
+    detect_slide_changes,
+    extract_audio,
+    extract_frames,
+    probe_duration,
+)
 from .models import AnalysisResult, FrameObservation, KnowledgeSynthesis
-from .ocr import choose_language, ocr_image
+from .ocr import choose_language, ocr_code_layout, ocr_image_detailed
 from .providers import (
     CapabilityNotSupported,
     SynthesisContext,
@@ -62,6 +73,8 @@ class PipelineOptions:
     storage_backend: str = "filesystem"
     index_db: str | None = None
     templates: tuple[str, ...] = ()
+    # "auto" | "slides" | "interval" - ver _should_detect_slides().
+    frame_strategy: str = "auto"
     # --- callback opcional de progresso (web UI) ---
     # Assinatura: on_progress(step: str, detail: str) -> None
     # Default None: comportamento identico ao anterior (so prints)
@@ -243,13 +256,16 @@ class VideoKnowledgePipeline:
 
         _emit("frames", "Extraindo frames...")
         frames_dir = ensure_dir(run_dir / "frames")
-        frame_paths = _extract_collection_frames(
+        frame_paths, frame_notes = _extract_collection_frames(
             media_paths,
             frames_dir,
             primary_duration=metadata.duration,
             interval=self.options.frame_interval,
             max_frames=self.options.max_frames,
+            frame_strategy=self.options.frame_strategy,
         )
+        for note in frame_notes:
+            _emit("frames", note)
 
         _emit("ocr", f"Rodando OCR em {len(frame_paths)} frames...")
         ocr_lang, ocr_warning = choose_language(self.options.tesseract_lang)
@@ -258,13 +274,27 @@ class VideoKnowledgePipeline:
         frames = []
         for frame_path in frame_paths:
             timestamp = _timestamp_from_frame_name(frame_path.name)
+            ocr_text, ocr_raw = ocr_image_detailed(frame_path, ocr_lang)
+            code = extract_code_block(ocr_raw)
+            if code:
+                # Segunda leitura, so nos frames que tem codigo: recupera a
+                # indentacao pelas coordenadas, que o modo texto nao devolve.
+                layout = ocr_code_layout(frame_path, ocr_lang)
+                if layout:
+                    code = normalize_code_block(layout)
+                code = normalize_code_block(strip_line_numbers(code))
+            code = redact_code_secrets(code)
             frames.append(
                 FrameObservation(
                     timestamp=timestamp,
                     image_path=str(frame_path.relative_to(run_dir)),
-                    ocr_text=ocr_image(frame_path, ocr_lang),
+                    ocr_text=ocr_text,
+                    code=code,
                 )
             )
+        code_frames = sum(1 for frame in frames if frame.code)
+        if code_frames:
+            _emit("ocr", f"Codigo detectado em {code_frames} frames.")
 
         result = AnalysisResult(
             run_id=run_id,
@@ -511,43 +541,89 @@ def _infer_media_kind(media_paths: list[Path], current: str = "") -> str:
     return "video"
 
 
+def _should_detect_slides(strategy: str, duration: float, interval: float, max_frames: int) -> bool:
+    """Decide se vale rodar deteccao de troca de slide neste video.
+
+    "auto" so liga a deteccao quando a amostragem por intervalo nao cobriria o
+    video inteiro (duracao/intervalo acima do teto de frames): e exatamente o
+    caso em que hoje se perde slide. Video curto continua no caminho antigo,
+    sem pagar a decodificacao extra.
+    """
+    if strategy == "interval":
+        return False
+    if strategy == "slides":
+        return True
+    if duration <= 0 or interval <= 0 or max_frames <= 0:
+        return False
+    return (duration / interval) > max_frames
+
+
 def _extract_collection_frames(
     media_paths: list[Path],
     frames_dir: Path,
     primary_duration: float,
     interval: float,
     max_frames: int,
-) -> list[Path]:
+    frame_strategy: str = "auto",
+) -> tuple[list[Path], list[str]]:
     frame_paths: list[Path] = []
+    notes: list[str] = []
     timestamp_offset = 0.0
     multiple_items = len(media_paths) > 1
+
+    # Com "slides" o usuario esta dizendo que o conteudo e tela/apresentacao,
+    # onde o texto e fino e o JPEG arruina o OCR de codigo. Nos outros modos o
+    # JPEG continua, para nao inflar o disco de video natural.
+    image_format = "png" if frame_strategy == "slides" else "jpg"
 
     for media_path in media_paths:
         if max_frames > 0 and len(frame_paths) >= max_frames:
             break
 
         remaining = max_frames - len(frame_paths) if max_frames > 0 else 0
-        item_max_frames = 1 if media_path.suffix.lower() in _IMAGE_SUFFIXES else remaining
+        is_image = media_path.suffix.lower() in _IMAGE_SUFFIXES
+        item_max_frames = 1 if is_image else remaining
         duration = 0.0
-        if media_path.suffix.lower() not in _IMAGE_SUFFIXES:
+        if not is_image:
             try:
                 duration = probe_duration(media_path)
             except Exception:  # noqa: BLE001
                 duration = primary_duration if not multiple_items else 0.0
 
+        effective_duration = duration or (primary_duration if not multiple_items else 0.0)
+
+        timestamps: list[float] | None = None
+        if not is_image and _should_detect_slides(
+            frame_strategy, effective_duration, interval, item_max_frames
+        ):
+            detected = detect_slide_changes(media_path)
+            if detected:
+                timestamps = detected
+                notes.append(
+                    f"Frames por troca de slide: {len(detected)} mudancas detectadas "
+                    f"em {media_path.name}."
+                )
+            else:
+                notes.append(
+                    "Nenhuma troca de slide detectada em "
+                    f"{media_path.name}; frames amostrados por intervalo."
+                )
+
         new_frames = extract_frames(
             media_path,
             frames_dir,
-            duration=duration or (primary_duration if not multiple_items else 0.0),
+            duration=effective_duration,
             interval=interval,
             max_frames=item_max_frames,
             start_index=len(frame_paths) + 1,
             timestamp_offset=timestamp_offset,
+            timestamps=timestamps,
+            image_format=image_format,
         )
         frame_paths.extend(new_frames)
         timestamp_offset += max(duration, 1.0)
 
-    return frame_paths
+    return frame_paths, notes
 
 
 def _append_transcript_quality_warning(

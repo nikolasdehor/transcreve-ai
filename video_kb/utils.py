@@ -18,10 +18,15 @@ class CommandError(RuntimeError):
         super().__init__("Command failed ({}): {}".format(returncode, " ".join(command)))
 
 
-def run_command(command: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess:
+def run_command(
+    command: list[str],
+    cwd: Path | None = None,
+    timeout: float | None = None,
+) -> subprocess.CompletedProcess:
     proc = subprocess.run(
         command,
         cwd=str(cwd) if cwd else None,
+        timeout=timeout,
         text=True,
         encoding="utf-8",
         errors="replace",
@@ -173,13 +178,18 @@ def _extract_youtube_id(
             candidate = parts[0] if parts else ""
         else:
             candidate = (qs.get("v") or [""])[0]
-            if not candidate and parts and parts[0] in {
-                "shorts",
-                "embed",
-                "v",
-                "e",
-                "live",
-            }:
+            if (
+                not candidate
+                and parts
+                and parts[0]
+                in {
+                    "shorts",
+                    "embed",
+                    "v",
+                    "e",
+                    "live",
+                }
+            ):
                 candidate = parts[1] if len(parts) > 1 else ""
     return candidate if _valid_youtube_id(candidate) else ""
 
