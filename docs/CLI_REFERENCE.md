@@ -139,6 +139,7 @@ transcreveai --index-db /tmp/transcreveai-batch.db agent batch ./sources.json \
 | `--strict` | Retorna exit code `1` se qualquer item falhar, mesmo continuando o batch | `false` |
 | `--frame-interval N` | Intervalo entre frames por run | `5.0` |
 | `--max-frames N` | Maximo de frames locais por run (`0` = sem limite) | `80` |
+| `--frame-strategy MODO` | `slides` detecta troca de tela, `interval` amostra por tempo, `auto` usa slides em video longo | `auto` |
 | `--visual-limit N` | Maximo de frames enviados para visao por IA em cada run | `30` |
 | `--template {content,skill}` | Gera os mesmos templates do `agent run` para cada run | - |
 | `--index` | Indexa cada run apos a analise | `false` |
@@ -240,6 +241,7 @@ transcreveai analyze SOURCE [opcoes]
 | `--out PATH` | Diretorio de saida | `outputs` |
 | `--frame-interval N` | Intervalo entre frames em segundos | `5.0` |
 | `--max-frames N` | Maximo de frames locais (`0` = sem limite) | `80` |
+| `--frame-strategy MODO` | `slides` detecta troca de tela, `interval` amostra por tempo, `auto` usa slides em video longo | `auto` |
 | `--visual-limit N` | Maximo de frames enviados para visao por IA | `30` |
 | `--ai {auto,off,full}` | Modo de uso da IA. `auto` usa IA se a chave do provider estiver definida | `auto` |
 | `--vision-model MODEL` | Modelo de visao/sintese | - |

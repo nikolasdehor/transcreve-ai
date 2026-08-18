@@ -61,7 +61,7 @@ def _patch_pipeline_heavy(source_hash: str | None = None) -> list[object]:
         patch("video_kb.pipeline.extract_audio"),
         patch("video_kb.pipeline.extract_frames", return_value=[]),
         patch("video_kb.pipeline.probe_duration", return_value=60.0),
-        patch("video_kb.pipeline.ocr_image", return_value=""),
+        patch("video_kb.pipeline.ocr_image_detailed", return_value=("", "")),
         patch("video_kb.pipeline.choose_language", return_value=("por", None)),
         patch("video_kb.pipeline.write_json"),
         patch("video_kb.pipeline.write_markdown"),

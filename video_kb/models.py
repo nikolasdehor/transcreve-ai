@@ -31,6 +31,9 @@ class FrameObservation:
     image_path: str
     ocr_text: str = ""
     visual_note: str = ""
+    # Codigo lido na tela, com indentacao preservada (video_kb/code_extraction.py).
+    # Vazio quando o frame nao mostra codigo.
+    code: str = ""
 
 
 @dataclass
