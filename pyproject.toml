@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "transcreve-ai"
-version = "0.1.0"
+version = "1.0.0"
 description = "TranscreveAI extrai dossies multimodais de videos para base de conhecimento."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 keywords = ["ai", "video", "transcription", "ocr", "knowledge-base", "yt-dlp"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 5 - Production/Stable",
   "Environment :: Console",
   "Intended Audience :: Developers",
   "Programming Language :: Python :: 3",
