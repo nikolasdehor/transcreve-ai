@@ -1,0 +1,74 @@
+name: Publish
+
+# Publica no PyPI quando uma release e criada no GitHub.
+#
+# Usa Trusted Publishing (OIDC): o PyPI confia neste repositorio e neste
+# workflow, entao nao existe token nem secret guardado em lugar nenhum. Para
+# funcionar, o publisher precisa estar registrado uma vez em
+# https://pypi.org/manage/account/publishing/ com:
+#   owner: DeHor-Labs | repo: transcreve-ai | workflow: publish.yml
+#   environment: pypi
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distribuicoes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Instala o build
+        run: python -m pip install --upgrade build
+
+      - name: Gera sdist e wheel
+        run: python -m build
+
+      - name: Confere os metadados do pacote
+        run: |
+          python -m pip install --upgrade twine
+          python -m twine check dist/*
+
+      - name: Falha se o artefato levar arquivo sensivel
+        run: |
+          set -euo pipefail
+          # O sdist nao deve carregar .env, cookies, outputs nem inputs.
+          if tar -tzf dist/*.tar.gz | grep -Ei '(^|/)(\.env|cookies?\.txt|outputs/|inputs/|\.venv/)'; then
+            echo "Artefato contem arquivo sensivel; publicacao abortada."
+            exit 1
+          fi
+          echo "Artefato limpo."
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: Publica no PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/transcreve-ai
+    permissions:
+      # Exigido pelo Trusted Publishing para emitir o token OIDC.
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publica
+        uses: pypa/gh-action-pypi-publish@release/v1
