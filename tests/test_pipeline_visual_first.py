@@ -80,7 +80,10 @@ def test_pipeline_discards_low_value_transcript_and_marks_visual_first() -> None
         with patch("video_kb.pipeline.fetch_media", side_effect=fake_fetch_media):
             with patch("video_kb.pipeline.extract_audio"):
                 with patch("video_kb.pipeline.extract_frames", side_effect=fake_extract_frames):
-                    with patch("video_kb.pipeline.ocr_image", return_value="Playwright\nCypress"):
+                    with patch(
+                        "video_kb.pipeline.ocr_image_detailed",
+                        return_value=("Playwright\nCypress", "Playwright\nCypress"),
+                    ):
                         with patch("video_kb.pipeline.load_provider", return_value=provider):
                             with patch("video_kb.pipeline.sha256_url", return_value="hash-visual"):
                                 result = VideoKnowledgePipeline(options).run(

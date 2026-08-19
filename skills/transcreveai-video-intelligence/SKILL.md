@@ -121,3 +121,18 @@ curl -X POST http://127.0.0.1:8000/api/sources/probe \
   -H "Content-Type: application/json" \
   -d '{"source":"https://www.instagram.com/reel/..."}'
 ```
+
+### Palestra tecnica, aula ou tutorial longo
+
+Use `--frame-strategy slides`: os frames saem na troca de tela em vez de a cada
+N segundos, entao nenhum slide se perde nem aparece repetido. O padrao `auto` ja
+liga isso sozinho quando o video e longo demais para o intervalo cobrir.
+
+```bash
+transcreveai analyze "<url>" --ai auto --frame-strategy slides
+```
+
+Codigo mostrado na tela e reconhecido e sai em bloco cercado no `knowledge.md`,
+com a indentacao reconstruida a partir da posicao do texto na imagem. Em
+`slides` os frames sao gravados em PNG: o JPEG borra texto fino e arruina o OCR
+de codigo.

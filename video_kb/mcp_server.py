@@ -40,9 +40,7 @@ def mcp_sources_probe(source: str) -> dict[str, Any]:
     return {
         "ok": probe.kind != "unknown",
         "probe": probe.to_dict(),
-        "warnings": []
-        if probe.kind != "unknown"
-        else ["Fonte nao processavel pelo probe."],
+        "warnings": [] if probe.kind != "unknown" else ["Fonte nao processavel pelo probe."],
     }
 
 
@@ -66,6 +64,7 @@ def mcp_analyze(
     storage: str = "",
     templates: list[str] | None = None,
     no_index: bool = False,
+    frame_strategy: str = "auto",
 ) -> dict[str, Any]:
     """Run the core analysis pipeline and return artifact paths."""
     _prepare_runtime()
@@ -73,6 +72,7 @@ def mcp_analyze(
         out_dir=Path(out),
         frame_interval=frame_interval,
         max_frames=max_frames,
+        frame_strategy=frame_strategy,
         visual_limit=visual_limit,
         ai_mode=ai,
         vision_model=vision_model,
@@ -89,9 +89,7 @@ def mcp_analyze(
         templates=_normalize_templates(templates),
     )
 
-    result, logs, error = _capture_stdio(
-        lambda: VideoKnowledgePipeline(options).run(source)
-    )
+    result, logs, error = _capture_stdio(lambda: VideoKnowledgePipeline(options).run(source))
     if error is not None:
         if isinstance(error, DuplicateRunError):
             return _duplicate_payload(error, logs)
@@ -141,6 +139,7 @@ def mcp_agent_run(
     index_db: str | None = None,
     storage: str = "",
     templates: list[str] | None = None,
+    frame_strategy: str = "auto",
 ) -> dict[str, Any]:
     """Run probe, analysis, optional indexing and optional RAG answer."""
     _prepare_runtime()
@@ -148,6 +147,7 @@ def mcp_agent_run(
         out_dir=Path(out),
         frame_interval=frame_interval,
         max_frames=max_frames,
+        frame_strategy=frame_strategy,
         visual_limit=visual_limit,
         ai_mode=ai,
         vision_model=vision_model,
@@ -170,13 +170,9 @@ def mcp_agent_run(
 
     result, logs, error = _capture_stdio(lambda: run_agent_workflow(source, options))
     if error is not None:
-        return _error_payload(
-            "agent_run_failed", "Falha ao executar workflow de agente.", logs
-        )
+        return _error_payload("agent_run_failed", "Falha ao executar workflow de agente.", logs)
     if result is None:
-        return _error_payload(
-            "agent_run_failed", "Falha ao executar workflow de agente.", logs
-        )
+        return _error_payload("agent_run_failed", "Falha ao executar workflow de agente.", logs)
 
     payload = result.to_dict()
     payload["ok"] = _agent_result_ok(payload)
@@ -209,6 +205,7 @@ def mcp_agent_batch(
     templates: list[str] | None = None,
     limit: int = 0,
     fail_fast: bool = False,
+    frame_strategy: str = "auto",
 ) -> dict[str, Any]:
     """Run agent workflow for a txt/csv/json list of sources."""
     _prepare_runtime()
@@ -218,6 +215,7 @@ def mcp_agent_batch(
         out_dir=Path(out),
         frame_interval=frame_interval,
         max_frames=max_frames,
+        frame_strategy=frame_strategy,
         visual_limit=visual_limit,
         ai_mode=ai,
         vision_model=vision_model,
@@ -313,9 +311,7 @@ def mcp_index(
         current_run_id = str(run.get("id") or "")
         analysis_path = str(run.get("analysis_path") or "")
         if not analysis_path or not Path(analysis_path).exists():
-            skipped.append(
-                {"run_id": current_run_id, "reason": "analysis_json_not_found"}
-            )
+            skipped.append({"run_id": current_run_id, "reason": "analysis_json_not_found"})
             continue
 
         with EmbeddingStore(db_path) as store:
@@ -335,16 +331,12 @@ def mcp_index(
                 force=force,
             )
         except DimMismatchError as exc:
-            skipped.append(
-                {"run_id": current_run_id, "reason": "dim_mismatch", "detail": str(exc)}
-            )
+            skipped.append({"run_id": current_run_id, "reason": "dim_mismatch", "detail": str(exc)})
             continue
         except CapabilityNotSupported as exc:
             return _error_payload("capability_not_supported", str(exc), _empty_logs())
         except Exception as exc:  # noqa: BLE001
-            skipped.append(
-                {"run_id": current_run_id, "reason": "index_failed", "detail": str(exc)}
-            )
+            skipped.append({"run_id": current_run_id, "reason": "index_failed", "detail": str(exc)})
             continue
 
         indexed.append({"run_id": current_run_id, "chunks": count})
@@ -421,9 +413,7 @@ def mcp_ask(
             run_ids=clean_run_ids,
         )
     except Exception as exc:  # noqa: BLE001
-        return _error_payload(
-            "ask_failed", f"Erro ao responder pergunta: {exc}", _empty_logs()
-        )
+        return _error_payload("ask_failed", f"Erro ao responder pergunta: {exc}", _empty_logs())
 
     return {
         "ok": True,
@@ -447,9 +437,7 @@ def mcp_runs_show(run_id: str, index_db: str | None = None) -> dict[str, Any]:
     with RunIndex(resolve_index_path(index_db)) as idx:
         run = idx.get_run(run_id)
     if run is None:
-        return _error_payload(
-            "run_not_found", f"Run '{run_id}' nao encontrado.", _empty_logs()
-        )
+        return _error_payload("run_not_found", f"Run '{run_id}' nao encontrado.", _empty_logs())
     return {"ok": True, "run": run}
 
 
@@ -464,14 +452,10 @@ def mcp_share_run(
     try:
         from .share import ShareRunError, share_run
     except ImportError as exc:
-        return _error_payload(
-            "share_unavailable", f"Dependencia ausente: {exc}", _empty_logs()
-        )
+        return _error_payload("share_unavailable", f"Dependencia ausente: {exc}", _empty_logs())
 
     try:
-        return share_run(
-            run_id=run_id, run_dir=run_dir, out_dir=out or None, index_db=index_db
-        )
+        return share_run(run_id=run_id, run_dir=run_dir, out_dir=out or None, index_db=index_db)
     except ShareRunError as exc:
         return _error_payload("share_failed", str(exc), _empty_logs())
     except Exception as exc:
@@ -482,17 +466,13 @@ def mcp_share_run(
         )
 
 
-def mcp_shared_catalog(
-    out: str = "", limit: int = 20, query: str = ""
-) -> dict[str, Any]:
+def mcp_shared_catalog(out: str = "", limit: int = 20, query: str = "") -> dict[str, Any]:
     """List durable shared-knowledge packets."""
     _prepare_runtime()
     try:
         from .share import shared_catalog
     except ImportError as exc:
-        return _error_payload(
-            "share_unavailable", f"Dependencia ausente: {exc}", _empty_logs()
-        )
+        return _error_payload("share_unavailable", f"Dependencia ausente: {exc}", _empty_logs())
 
     try:
         return shared_catalog(out_dir=out or None, limit=limit, query=query)
@@ -549,6 +529,7 @@ def create_server(host: str = "127.0.0.1", port: int = 8765) -> Any:
         storage: str = "",
         templates: list[str] | None = None,
         no_index: bool = False,
+        frame_strategy: str = "auto",
     ) -> dict[str, Any]:
         return mcp_analyze(
             source=source,
@@ -561,6 +542,7 @@ def create_server(host: str = "127.0.0.1", port: int = 8765) -> Any:
             force=force,
             frame_interval=frame_interval,
             max_frames=max_frames,
+            frame_strategy=frame_strategy,
             visual_limit=visual_limit,
             vision_model=vision_model,
             transcribe_model=transcribe_model,
@@ -596,6 +578,7 @@ def create_server(host: str = "127.0.0.1", port: int = 8765) -> Any:
         index_db: str | None = None,
         storage: str = "",
         templates: list[str] | None = None,
+        frame_strategy: str = "auto",
     ) -> dict[str, Any]:
         return mcp_agent_run(
             source=source,
@@ -612,6 +595,7 @@ def create_server(host: str = "127.0.0.1", port: int = 8765) -> Any:
             force=force,
             frame_interval=frame_interval,
             max_frames=max_frames,
+            frame_strategy=frame_strategy,
             visual_limit=visual_limit,
             vision_model=vision_model,
             transcribe_model=transcribe_model,
@@ -648,6 +632,7 @@ def create_server(host: str = "127.0.0.1", port: int = 8765) -> Any:
         templates: list[str] | None = None,
         limit: int = 0,
         fail_fast: bool = False,
+        frame_strategy: str = "auto",
     ) -> dict[str, Any]:
         return mcp_agent_batch(
             sources_file=sources_file,
@@ -664,6 +649,7 @@ def create_server(host: str = "127.0.0.1", port: int = 8765) -> Any:
             force=force,
             frame_interval=frame_interval,
             max_frames=max_frames,
+            frame_strategy=frame_strategy,
             visual_limit=visual_limit,
             vision_model=vision_model,
             transcribe_model=transcribe_model,
@@ -728,9 +714,7 @@ def create_server(host: str = "127.0.0.1", port: int = 8765) -> Any:
         return mcp_share_run(run_id=run_id, run_dir=run_dir, out=out, index_db=index_db)
 
     @server.tool(name="shared_catalog", structured_output=True)
-    def shared_catalog_tool(
-        out: str = "", limit: int = 20, query: str = ""
-    ) -> dict[str, Any]:
+    def shared_catalog_tool(out: str = "", limit: int = 20, query: str = "") -> dict[str, Any]:
         return mcp_shared_catalog(out=out, limit=limit, query=query)
 
     return server
@@ -749,9 +733,7 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument("--host", default="127.0.0.1", help="Host para SSE/HTTP.")
     parser.add_argument("--port", type=int, default=8765, help="Porta para SSE/HTTP.")
-    parser.add_argument(
-        "--mount-path", default=None, help="Mount path opcional para SSE."
-    )
+    parser.add_argument("--mount-path", default=None, help="Mount path opcional para SSE.")
     args = parser.parse_args(argv)
 
     try:
@@ -777,9 +759,7 @@ def _normalize_templates(raw_templates: list[str] | None) -> tuple[str, ...]:
     return tuple(templates)
 
 
-def _capture_stdio(
-    fn: Callable[[], _T]
-) -> tuple[_T | None, dict[str, str], BaseException | None]:
+def _capture_stdio(fn: Callable[[], _T]) -> tuple[_T | None, dict[str, str], BaseException | None]:
     stdout = io.StringIO()
     stderr = io.StringIO()
     try:
@@ -827,9 +807,7 @@ def _analysis_payload(
     }
 
 
-def _duplicate_payload(
-    error: DuplicateRunError, logs: dict[str, str]
-) -> dict[str, Any]:
+def _duplicate_payload(error: DuplicateRunError, logs: dict[str, str]) -> dict[str, Any]:
     existing = dict(error.existing)
     analysis_path = str(existing.get("analysis_path") or "")
     return {
