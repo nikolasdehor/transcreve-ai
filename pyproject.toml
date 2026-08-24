@@ -24,7 +24,7 @@ classifiers = [
   "Topic :: Text Processing :: Indexing",
 ]
 dependencies = [
-  "yt-dlp>=2024.1.0",
+  "yt-dlp>=2026.7.4",
   "openai>=1.0.0",
 ]
 
