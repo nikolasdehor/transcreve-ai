@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TranscreveAI | Vídeo em conhecimento verificável</title>
+    <meta name="description" content="Transforme vídeos e arquivos de mídia em transcrição, evidências e dossiês reutilizáveis.">
+    <link rel="canonical" href="https://transcreve-ai-site.vercel.app/">
+    <link rel="alternate" type="text/markdown" href="/index.md">
+    <link rel="describedby" href="/llms.txt">
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header>
+      <div class="wrap nav">
+        <a class="brand" href="/">Transcreve<span>AI</span></a>
+        <nav class="links" aria-label="Navegação principal">
+          <a href="#caso-tecnico">Caso técnico</a>
+          <a href="#perguntas">Perguntas</a>
+          <a href="/privacidade.html">Privacidade</a>
+          <a href="https://github.com/DeHor-Labs/transcreve-ai">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="conteudo">
+      <section class="wrap hero">
+        <div>
+          <p class="eyebrow">Ferramenta aberta para agentes e pessoas desenvolvedoras</p>
+          <h1>Vídeo vira conhecimento que dá para conferir</h1>
+          <p class="lead">
+            O TranscreveAI recebe URLs públicas ou arquivos autorizados e gera transcrição,
+            OCR, observações visuais e dossiês com referências às evidências processadas.
+          </p>
+          <div class="button-row">
+            <a class="button" href="https://github.com/DeHor-Labs/transcreve-ai">Ver código e como usar</a>
+            <a class="button secondary" href="https://github.com/DeHor-Labs/transcreve-ai/blob/main/docs/CLI_REFERENCE.md">Consultar a CLI</a>
+          </div>
+        </div>
+        <aside class="panel hero-card" aria-label="Saídas do TranscreveAI">
+          <strong>Um run identificável</strong>
+          <ul>
+            <li>transcrição, OCR e observações de frames;</li>
+            <li><code>analysis.json</code> e <code>knowledge.md</code> em <code>outputs/</code> por padrão;</li>
+            <li>indexação automática em <code>analyze</code>, com opt-out;</li>
+            <li><code>manifest.json</code> somente ao compartilhar via <code>transcreveai share</code> ou <code>share_run</code>.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="wrap" aria-labelledby="recursos-heading">
+        <h2 id="recursos-heading">Do arquivo bruto à resposta rastreável</h2>
+        <div class="grid">
+          <article class="panel"><h3>Sonda a fonte</h3><p>Verifica o tipo de mídia e as limitações conhecidas antes da análise completa.</p></article>
+          <article class="panel"><h3>Extrai modalidades</h3><p>Combina áudio, texto visível e frames para não reduzir o vídeo a uma única transcrição.</p></article>
+          <article class="panel"><h3>Entrega artefatos</h3><p><code>analyze</code> e a análise MCP gravam em <code>outputs/</code> e tentam indexar por padrão. Desative embeddings com <code>--no-index</code> ou <code>no_index=true</code>; isso não apaga as saídas.</p></article>
+        </div>
+      </section>
+
+      <section class="wrap section" id="caso-tecnico" aria-labelledby="case-heading">
+        <p class="eyebrow">Caso técnico do próprio produto</p>
+        <h2 id="case-heading">De um resumo sem trilha para um dossiê retomável</h2>
+        <div class="grid">
+          <article class="panel"><h3>Problema</h3><p>Quando um agente recebe um vídeo, é fácil entregar uma síntese sem registrar fonte, frames ou decisões de processamento.</p></article>
+          <article class="panel"><h3>Implementação</h3><p>Cada execução mantém <code>run_id</code>, artefatos estruturados e referências a transcrição, OCR e evidências visuais.</p></article>
+          <article class="panel"><h3>Prova pública</h3><p>O <a href="https://github.com/DeHor-Labs/transcreve-ai">repositório</a> publica código, testes e documentação da CLI. Este é um caso do próprio produto, sem cliente ou ganho atribuído.</p></article>
+        </div>
+      </section>
+
+      <section class="wrap section narrow" id="perguntas" aria-labelledby="faq-heading">
+        <p class="eyebrow">Perguntas frequentes</p>
+        <h2 id="faq-heading">O que vale saber antes de processar um vídeo</h2>
+        <div class="faq-list">
+          <details class="panel"><summary>Posso enviar qualquer vídeo?</summary><p>Envie apenas mídia pública ou conteúdo que você tem autorização para processar. Fontes privadas podem exigir cookies ou credenciais e precisam de cuidado adicional.</p></details>
+          <details class="panel"><summary>Preciso usar um provedor de IA externo?</summary><p>Não em todos os fluxos. Há etapas locais e modo sem síntese por IA. Quando um provedor externo é escolhido, os dados necessários àquela etapa são enviados a ele.</p></details>
+          <details class="panel"><summary>A transcrição e o OCR são sempre exatos?</summary><p>Não. Ruído, idioma, compressão, texto pequeno e cortes rápidos afetam a extração. Decisões importantes exigem revisão das evidências.</p></details>
+          <details class="panel"><summary>Onde ficam as saídas e o índice?</summary><p><code>analyze</code> e a análise MCP usam <code>outputs/</code> e tentam indexar por padrão. Escolha caminhos isolados e limpe-os para uso temporário. <code>--no-index</code> ou <code>no_index=true</code> evitam embeddings; compartilhar depois exige <code>transcreveai share</code> ou <code>share_run</code>.</p></details>
+          <details class="panel"><summary>Quais sites e formatos funcionam?</summary><p>O suporte varia por fonte, disponibilidade pública, região e autenticação. Use a sondagem de fonte e consulte a matriz publicada no repositório.</p></details>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap footer-row">
+        <span>TranscreveAI · projeto DeHor Labs</span>
+        <nav aria-label="Links legais">
+          <a href="/support.html">Suporte</a>
+          <a href="/privacidade.html">Privacidade</a>
+          <a href="/termos.html">Termos</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

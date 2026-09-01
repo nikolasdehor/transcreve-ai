@@ -1,0 +1,23 @@
+# TranscreveAI
+
+> Ferramenta aberta que transforma URLs públicas e arquivos de mídia autorizados em conhecimento multimodal com evidências rastreáveis.
+
+## Produto
+
+- [Página inicial](https://transcreve-ai-site.vercel.app/): proposta, recursos, caso técnico e perguntas frequentes.
+- [Versão Markdown](https://transcreve-ai-site.vercel.app/index.md): conteúdo textual da landing.
+- [Código-fonte](https://github.com/DeHor-Labs/transcreve-ai): implementação, testes e documentação.
+
+## Políticas e suporte
+
+- [Suporte](https://transcreve-ai-site.vercel.app/support.html): documentação e relato seguro de problemas.
+- [Aviso de Privacidade](https://transcreve-ai-site.vercel.app/privacidade.html): fontes, mídia, artefatos e retenção.
+- [Termos de Uso](https://transcreve-ai-site.vercel.app/termos.html): uso autorizado e limites dos resultados.
+
+## Limites
+
+- Transcrição, OCR e síntese exigem revisão quando a decisão for importante.
+- O usuário deve ter autorização para processar a fonte.
+- O caso técnico é do próprio produto e não atribui cliente, depoimento ou ganho comercial.
+- `analyze` grava em `outputs/` e tenta indexar por padrão; `--no-index` ou `no_index=true` desativam embeddings, não as saídas.
+- `manifest.json` é criado somente ao compartilhar via `transcreveai share` ou `share_run`.
