@@ -32,6 +32,7 @@ class OpenAIClientEnvTest(unittest.TestCase):
     def test_openai_api_key_generica_ainda_serve_de_fallback(self) -> None:
         env = {
             "OPENAI_API_KEY": "sk-generica",
+            "OPENAI_BASE_URL": "https://router.example/v1",
             "VIDEO_KB_OPENAI_API_KEY": "",
             "VIDEO_KB_OPENAI_BASE_URL": "https://meu-proxy.example/v1",
         }
