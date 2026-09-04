@@ -8,7 +8,6 @@ usavam antes da refatoracao, garantindo retrocompatibilidade total.
 
 from __future__ import annotations
 
-import os
 from collections.abc import Iterable
 
 # Reexporta tipos e utilitarios que continuam usados externamente
@@ -18,6 +17,7 @@ from .models import FrameObservation, TranscriptSegment  # noqa: F401 (reexport)
 from .providers.openai_provider import (
     DEFAULT_TRANSCRIBE_MODEL,
     DEFAULT_VISION_MODEL,
+    openai_api_key,
 )
 from .providers.openai_provider import (
     OpenAIProvider as OpenAIAnalyzer,
@@ -25,8 +25,8 @@ from .providers.openai_provider import (
 
 
 def openai_available() -> bool:
-    """Retorna True se OPENAI_API_KEY estiver definida no ambiente."""
-    return bool(os.environ.get("OPENAI_API_KEY"))
+    """Retorna True se VIDEO_KB_OPENAI_API_KEY ou OPENAI_API_KEY estiver definida."""
+    return bool(openai_api_key())
 
 
 def select_visual_frames(frames: list[FrameObservation], limit: int) -> list[int]:
