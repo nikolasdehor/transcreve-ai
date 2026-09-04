@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/nikolasdehor/transcreve-ai/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/nikolasdehor/transcreve-ai/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/DeHor-Labs/transcreve-ai/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/DeHor-Labs/transcreve-ai/actions/workflows/ci.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-f5c542.svg"></a>
   <img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10%2B-3b82f6.svg">
   <img alt="CLI" src="https://img.shields.io/badge/interface-CLI-14b8a6.svg">
@@ -190,7 +190,7 @@ sudo apt-get install -y ffmpeg tesseract-ocr
 ### 2. Install TranscreveAI
 
 ```bash
-git clone https://github.com/nikolasdehor/transcreve-ai.git
+git clone https://github.com/DeHor-Labs/transcreve-ai.git
 cd transcreve-ai
 python3 -m venv .venv
 source .venv/bin/activate

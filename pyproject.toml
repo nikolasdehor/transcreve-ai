@@ -74,9 +74,9 @@ dev = [
 filesystem = "video_kb.storage.filesystem:FilesystemBackend"
 
 [project.urls]
-Homepage = "https://github.com/nikolasdehor/transcreve-ai"
-Repository = "https://github.com/nikolasdehor/transcreve-ai"
-Issues = "https://github.com/nikolasdehor/transcreve-ai/issues"
+Homepage = "https://github.com/DeHor-Labs/transcreve-ai"
+Repository = "https://github.com/DeHor-Labs/transcreve-ai"
+Issues = "https://github.com/DeHor-Labs/transcreve-ai/issues"
 
 [project.scripts]
 transcreveai = "video_kb.cli:main"
