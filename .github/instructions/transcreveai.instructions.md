@@ -17,5 +17,6 @@ applyTo: "**"
 
 - For smoke tests, demos, and automated validation, prefer `--index-db /tmp/...` and `--out /tmp/...` so proof runs do not pollute the user's real index.
 - When the user asks to use TranscreveAI, base the answer on generated artifacts (`knowledge.md`, `analysis.json`, and template files when present), not on a manual parallel dossier.
+- If a temporary run accidentally used or registered in the user's real index, remove it with `transcreveai runs rm RUN_ID --force` before deleting the run directory.
 - Do not expose API keys, cookies, or complete sensitive URLs in logs or responses.
 - Keep IDE/agent instruction files synchronized with `AGENTS.md`.
