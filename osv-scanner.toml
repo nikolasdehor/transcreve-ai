@@ -1,0 +1,39 @@
+[[IgnoredVulns]]
+id = "GHSA-g6cj-pr64-35w5"
+ignoreUntil = 2026-11-22
+reason = "Backlog aceito na auditoria de 2026-08-22: cryptography 49.0.0, fix exige major (50.0.0); reavaliar até a data"
+
+[[IgnoredVulns]]
+id = "GHSA-6hr6-w5qg-qmwg"
+ignoreUntil = 2026-11-22
+reason = "Backlog aceito na auditoria de 2026-08-22: h2 4.3.0, transitivo via httpx/http2, fix simples 4.4.1 disponível mas fora do escopo desta tarefa, que é só CI; reavaliar até a data"
+
+[[IgnoredVulns]]
+id = "GHSA-j5g9-f88f-gfj3"
+ignoreUntil = 2026-11-22
+reason = "Backlog aceito na auditoria de 2026-08-22: httplib2 0.31.2, transitivo via extra gemini, fix simples 0.32.0 disponível mas fora do escopo desta tarefa, que é só CI; reavaliar até a data"
+
+[[IgnoredVulns]]
+id = "GHSA-vj7q-gjh5-988w"
+ignoreUntil = 2026-11-22
+reason = "Backlog aceito na auditoria de 2026-08-22: mcp 1.27.2, extra mcp direto e já permitido por >=1.0.0, fix simples 1.28.1 via relock mas fora do escopo desta tarefa, que é só CI; reavaliar até a data"
+
+[[IgnoredVulns]]
+id = "GHSA-m4p7-r5rc-7g4j"
+ignoreUntil = 2026-11-22
+reason = "Backlog aceito na auditoria de 2026-08-22: pyasn1 0.6.3, transitivo via extras que usam google-auth/rsa, fix simples 0.6.4 disponível mas fora do escopo desta tarefa, que é só CI; reavaliar até a data"
+
+[[IgnoredVulns]]
+id = "GHSA-8ppf-4f7h-5ppj"
+ignoreUntil = 2026-11-22
+reason = "Backlog aceito na auditoria de 2026-08-22: pyasn1 0.6.3, transitivo via extras que usam google-auth/rsa, fix simples 0.6.4 disponível mas fora do escopo desta tarefa, que é só CI; reavaliar até a data"
+
+[[IgnoredVulns]]
+id = "GHSA-hm4w-wwcw-mr6r"
+ignoreUntil = 2026-11-22
+reason = "Backlog aceito na auditoria de 2026-08-22: pyasn1 0.6.3, transitivo via extras que usam google-auth/rsa, fix simples 0.6.4 disponível mas fora do escopo desta tarefa, que é só CI; reavaliar até a data"
+
+[[IgnoredVulns]]
+id = "GHSA-h35f-9h28-mq5c"
+ignoreUntil = 2026-11-22
+reason = "Backlog aceito na auditoria de 2026-08-22: setuptools 81.0.0, dependência de build já permitida por >=68, fix simples 83.0.0 via relock mas fora do escopo desta tarefa, que é só CI; reavaliar até a data"
