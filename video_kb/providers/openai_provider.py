@@ -22,6 +22,19 @@ DEFAULT_VISION_MODEL = os.environ.get("VIDEO_KB_VISION_MODEL", "gpt-4o-mini")
 DEFAULT_TRANSCRIBE_MODEL = os.environ.get("VIDEO_KB_TRANSCRIBE_MODEL", "whisper-1")
 DEFAULT_EMBED_MODEL = "text-embedding-3-small"
 MAX_IMAGE_BYTES = int(os.environ.get("VIDEO_KB_MAX_IMAGE_BYTES", str(8 * 1024 * 1024)))
+OFFICIAL_OPENAI_BASE_URL = "https://api.openai.com/v1"
+
+
+# ponytail: o shell pode exportar OPENAI_API_KEY/OPENAI_BASE_URL de outro produto
+# (router Verboo, proxy corporativo) e o SDK herdaria os dois em silencio, com
+# Whisper/embeddings voltando 401. VIDEO_KB_OPENAI_* tem precedencia e o base_url
+# so sai da API oficial por override explicito.
+def openai_api_key() -> str | None:
+    return os.environ.get("VIDEO_KB_OPENAI_API_KEY") or os.environ.get("OPENAI_API_KEY")
+
+
+def openai_base_url() -> str:
+    return os.environ.get("VIDEO_KB_OPENAI_BASE_URL") or OFFICIAL_OPENAI_BASE_URL
 
 
 class OpenAIProvider(AIProvider):
@@ -42,7 +55,7 @@ class OpenAIProvider(AIProvider):
         if self._client is None:
             from openai import OpenAI  # lazy import
 
-            self._client = OpenAI()
+            self._client = OpenAI(api_key=openai_api_key(), base_url=openai_base_url())
         return self._client
 
     def capabilities(self) -> set[str]:
@@ -57,7 +70,10 @@ class OpenAIProvider(AIProvider):
         chunks_dir: Path,
         language: str | None,
     ) -> TranscribeResult:
-        from ..media import probe_duration, split_audio  # lazy - evita import circular no topo
+        from ..media import (
+            probe_duration,
+            split_audio,
+        )  # lazy - evita import circular no topo
 
         lang = language or self.language
         if audio_path.stat().st_size > AUDIO_CHUNK_LIMIT_BYTES:
@@ -85,7 +101,10 @@ class OpenAIProvider(AIProvider):
         language: str | None,
     ) -> tuple[str, list[TranscriptSegment]]:
         client = self._get_client()
-        kwargs: dict[str, Any] = {"model": self.transcribe_model, "response_format": "verbose_json"}
+        kwargs: dict[str, Any] = {
+            "model": self.transcribe_model,
+            "response_format": "verbose_json",
+        }
         if language:
             kwargs["language"] = language
         try:
