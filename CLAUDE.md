@@ -17,5 +17,6 @@ This file mirrors `AGENTS.md` for Claude Code and Claude-compatible IDE integrat
 - For smoke tests, demos, and automated validation, prefer `--index-db /tmp/...` and `--out /tmp/...` so proof runs do not pollute the user's real index.
 - When the user asks to use TranscreveAI, base the answer on generated artifacts (`knowledge.md`, `analysis.json`, and template files when present), not on a manual parallel dossier.
 - For temporary runs, create a dedicated temp directory, use `--out "$TMP/runs"` and `--index-db "$TMP/index.db"`, read the artifacts, then remove the temp directory.
+- If a temporary run accidentally used the user's real index or had to register a run in it, remove that run with `transcreveai runs rm RUN_ID --force` before deleting the run folder.
 - Do not expose API keys, cookies, or complete sensitive URLs in logs or responses.
 - Keep IDE/agent instruction files synchronized with `AGENTS.md`.
