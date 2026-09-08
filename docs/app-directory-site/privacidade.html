@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Aviso de Privacidade | TranscreveAI</title>
+    <meta name="description" content="Como o TranscreveAI trata fontes, mídia e artefatos gerados.">
+    <link rel="canonical" href="https://transcreve-ai-site.vercel.app/privacidade.html">
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header><div class="wrap nav"><a class="brand" href="/">Transcreve<span>AI</span></a><nav class="links" aria-label="Navegação"><a href="/">Início</a><a href="/support.html">Suporte</a><a href="/termos.html">Termos</a></nav></div></header>
+    <main id="conteudo"><article class="wrap legal">
+      <p class="eyebrow">Privacidade</p>
+      <h1>Aviso de Privacidade</h1>
+      <p><strong>Última atualização:</strong> 31 de agosto de 2026.</p>
+
+      <h2>Esta página pública</h2>
+      <p>A landing não possui formulário, conta, analytics ou cookie próprio. Links para GitHub e outros serviços levam você para páginas sujeitas às políticas desses serviços.</p>
+
+      <h2>Dados processados pela ferramenta</h2>
+      <p>Quando você usa a aplicação, a CLI ou o MCP, o TranscreveAI pode processar URLs, arquivos de mídia, prompts, perguntas, opções de configuração e credenciais de acesso à fonte fornecidas pelo próprio usuário. Os artefatos gerados podem incluir mídia baixada, áudio, frames, transcrição, OCR, observações visuais, metadados, resumos, dossiês, índices e logs operacionais.</p>
+
+      <h2>Onde o processamento acontece</h2>
+      <p>Instalações locais gravam saídas e índices nos caminhos escolhidos pelo usuário. Conforme a configuração, etapas podem usar modelos locais ou provedores externos de IA, transcrição, armazenamento, hospedagem e acesso à plataforma de origem. Somente o necessário à etapa escolhida deve ser enviado. Cookies, chaves e credenciais não devem aparecer em relatórios ou logs compartilhados.</p>
+
+      <h2>Retenção</h2>
+      <p>Na CLI <code>analyze</code> e na análise MCP, os runs são gravados em <code>outputs/</code> e a indexação é tentada por padrão. Use outro caminho de saída e índice para isolar uma execução; <code>--no-index</code> na CLI ou <code>no_index=true</code> no MCP desativam embeddings, mas não apagam arquivos já gerados. Em fluxos aninhados temporários, a convenção do projeto é usar caminhos isolados e removê-los depois da resposta. O pacote durável e seu <code>manifest.json</code> só são criados ao compartilhar via <code>transcreveai share</code> ou <code>share_run</code>. Em um serviço hospedado, artefatos e logs podem ser mantidos pelo tempo necessário para entregar a execução, investigar falhas, proteger o serviço e cumprir obrigações aplicáveis.</p>
+
+      <h2>Responsabilidade sobre a fonte</h2>
+      <p>Envie somente conteúdo público ou mídia que você tem autorização para processar. Não envie segredos, dados pessoais desnecessários ou mídia confidencial sem base adequada e controles compatíveis.</p>
+
+      <h2>Seus direitos e contato</h2>
+      <p>Em uso local, remova os arquivos e a entrada correspondente do índice que você controla. Para dados de um serviço hospedado, solicite acesso, correção ou exclusão pelo <a href="/support.html">canal de suporte</a> ou por <a href="mailto:nikolasdehor79@gmail.com">nikolasdehor79@gmail.com</a>.</p>
+    </article></main>
+  </body>
+</html>
